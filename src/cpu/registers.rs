@@ -1,4 +1,3 @@
-
 // Registers
 //   16bit Hi   Lo   Name/Function
 //   AF    A    -    Accumulator & Flags
@@ -53,8 +52,8 @@ pub enum CpuFlag {
 // screen. Two musical notes are then played on the internal speaker. Again,
 // the cartridge locations $104 to $133 are read but this time they are
 // compared with a table in the internal rom. If any byte fails to compare,
-// then the GameBoy stops comparing bytes and simply halts all operations. 
-// If all locations compare the same, then the GameBoy starts adding all of 
+// then the GameBoy stops comparing bytes and simply halts all operations.
+// If all locations compare the same, then the GameBoy starts adding all of
 // the bytes in the cartridge from $134 to $14d. A value of 25 decimal is added
 // to this total. If the least significant byte of the result is a not a zero,
 // then the GameBoy will stop doing anything. If it is a zero, then the internal
@@ -65,7 +64,7 @@ pub enum CpuFlag {
 //    DE=$00D8
 //    HL=$014D
 //    Stack Pointer=$FFFE
-impl Registers { 
+impl Registers {
     pub fn new() -> Registers {
         Registers {
             pc: 0x0100,
@@ -88,13 +87,13 @@ impl Registers {
 
     pub fn set_af(&mut self, value: u16) {
         self.a = (value >> 8) as u8;
-        self.f = (value & 0x00F0) as u8; 
+        self.f = (value & 0x00F0) as u8;
     }
 
     pub fn bc(&self) -> u16 {
         ((self.b as u16) << 8) | (self.c as u16)
     }
-    
+
     pub fn set_bc(&mut self, value: u16) {
         self.b = (value >> 8) as u8;
         self.c = (value & 0x00FF) as u8;
@@ -104,7 +103,7 @@ impl Registers {
         ((self.d as u16) << 8) | (self.e as u16)
     }
 
-    pub fn set_de(&mut self, value: u16) { 
+    pub fn set_de(&mut self, value: u16) {
         self.d = (value >> 8) as u8;
         self.e = (value & 0x00FF) as u8;
     }
@@ -116,6 +115,18 @@ impl Registers {
     pub fn set_hl(&mut self, value: u16) {
         self.h = (value >> 8) as u8;
         self.l = (value & 0x00FF) as u8;
+    }
+
+    pub fn inc_hl(&mut self) -> u16 {
+        let res = self.hl();
+        self.set_hl(res + 1);
+        res
+    }
+
+    pub fn dec_hl(&mut self) -> u16 {
+        let res = self.hl();
+        self.set_hl(res - 1);
+        res
     }
 
     pub fn set_flag(&mut self, flag: CpuFlag, set: bool) {
@@ -131,20 +142,19 @@ impl Registers {
 
     pub fn has_flag(&self, flag: CpuFlag) -> bool {
         let mask = flag as u8;
-        self.f & mask > 0        
+        self.f & mask > 0
     }
 
     #[cfg(test)]
-    fn set_f(&mut self, value: u8)
-    {
+    fn set_f(&mut self, value: u8) {
         self.f = value & 0xF0;
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::Registers;
     use super::CpuFlag;
+    use super::Registers;
 
     #[test]
     fn wide_registers() {
@@ -188,6 +198,26 @@ mod test {
             assert_eq!(reg.has_flag(flag), true);
             reg.set_flag(flag, false);
             assert_eq!(reg.has_flag(flag), false);
-        }        
+        }
+
+        // Set all CPU flags
+        for flag in flags {
+            reg.set_flag(flag, true);
+        }
+        for flag in flags {
+            assert_eq!(reg.has_flag(flag), true);
+        }
+    }
+
+    #[test]
+    fn hl_special_functions() {
+        let mut reg = Registers::new();
+        reg.set_hl(0x1234);
+        assert_eq!(reg.hl(), 0x1234);
+        assert_eq!(reg.dec_hl(), 0x1234);
+        assert_eq!(reg.dec_hl(), 0x1233);
+        assert_eq!(reg.inc_hl(), 0x1232);
+        assert_eq!(reg.inc_hl(), 0x1233);
+        assert_eq!(reg.hl(), 0x1234);
     }
 }
