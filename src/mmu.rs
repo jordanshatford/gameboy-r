@@ -4,6 +4,7 @@ use std::path::Path;
 
 use crate::apu::APU;
 use crate::cartridges::{self, Cartridge};
+use crate::joypad::Joypad;
 use crate::memory::Memory;
 use crate::ppu::PPU;
 
@@ -13,13 +14,36 @@ pub enum Speed {
     Double = 0x02,
 }
 
+// FF0F - IF - Interrupt Flag (R/W)
+// Bit 0: VBlank   Interrupt Request (INT $40)  (1=Request)
+// Bit 1: LCD STAT Interrupt Request (INT $48)  (1=Request)
+// Bit 2: Timer    Interrupt Request (INT $50)  (1=Request)
+// Bit 3: Serial   Interrupt Request (INT $58)  (1=Request)
+// Bit 4: Joypad   Interrupt Request (INT $60)  (1=Request)
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum InterruptFlag {
+    VBlank = 0b0000_0001,
+    LCDStat = 0b0000_0010,
+    Timer = 0b0000_0100,
+    Serial = 0b0000_1000,
+    Joypad = 0b0001_0000,
+    None = 0b0000_0000,
+}
+
 pub struct MMU {
     cartridge: Box<dyn Cartridge>,
     apu: Option<APU>,
     ppu: PPU,
+    joypad: Joypad,
     speed: Speed,
     interruptes_asserted: u8, // IF
-    interruptes_enabled: u8,  // IE
+    // FFFF - IE - Interrupt Enable (R/W)
+    // Bit 0: VBlank   Interrupt Enable  (INT $40)  (1=Enable)
+    // Bit 1: LCD STAT Interrupt Enable  (INT $48)  (1=Enable)
+    // Bit 2: Timer    Interrupt Enable  (INT $50)  (1=Enable)
+    // Bit 3: Serial   Interrupt Enable  (INT $58)  (1=Enable)
+    // Bit 4: Joypad   Interrupt Enable  (INT $60)  (1=Enable)
+    interruptes_enabled: u8, // IE
 }
 
 impl MMU {
@@ -28,6 +52,7 @@ impl MMU {
             cartridge: cartridges::new(path),
             apu: None,
             ppu: PPU::new(),
+            joypad: Joypad::new(),
             speed: Speed::Normal,
             interruptes_asserted: 0x00,
             interruptes_enabled: 0x00,
@@ -55,6 +80,8 @@ impl Memory for MMU {
             // Memory mapped I/O
             0xFF00..=0xFF7F => {
                 match addr {
+                    // P1/JOYP - Joypad (R/W)
+                    0xFF00 => self.joypad.get_byte(addr),
                     // IF - Interrupt Flag (R/W)
                     0xFF0F => self.interruptes_asserted,
                     // Sound Controller (APU)
@@ -91,6 +118,8 @@ impl Memory for MMU {
             // Memory mapped I/O
             0xFF00..=0xFF7F => {
                 match addr {
+                    // P1/JOYP - Joypad (R/W)
+                    0xFF00 => self.joypad.set_byte(addr, value),
                     // IF - Interrupt Flag (R/W)
                     0xFF0F => self.interruptes_asserted = value,
                     // Sound Controller (APU)
