@@ -11,7 +11,38 @@ pub trait Stable {
     fn sav(&self);
 }
 
-pub trait Cartridge: Memory + Stable + Send {}
+pub trait Cartridge: Memory + Stable + Send {
+    // 0134-0143 - Title
+    // Title of the game in UPPER CASE ASCII. If it is less than 16 characters then the
+    // remaining bytes are filled with 00's. When inventing the CGB, Nintendo has reduced
+    // the length of this area to 15 characters, and some months later they had the
+    // fantastic idea to reduce it to 11 characters only. The new meaning of the ex-title
+    // bytes is described below.
+
+    // 013F-0142 - Manufacturer Code
+    // In older cartridges this area has been part of the Title (see above), in newer
+    // cartridges this area contains an 4 character uppercase manufacturer code. Purpose and
+    // Deeper Meaning unknown.
+
+    // 0143 - CGB Flag
+    // In older cartridges this byte has been part of the Title (see above). In CGB cartridges
+    // the upper bit is used to enable CGB functions. This is required, otherwise the CGB
+    // switches itself into Non-CGB-Mode. Typical values are:
+    //  80h - Game supports CGB functions, but works on old gameboys also.
+    //  C0h - Game works on CGB only (physically the same as 80h).
+    fn get_title(&self) -> String {
+        let mut buffer = String::new();
+        let has_short_title = self.get_byte(0x0143) == 0x80;
+        let end_addr: u16 = if has_short_title { 0x013E } else { 0x0143 };
+        for addr in 0x0134..=end_addr {
+            match self.get_byte(addr) {
+                0 => break,
+                byte => buffer.push(byte as char),
+            }
+        }
+        buffer
+    }
+}
 
 // Specifies which Memory Bank Controller (if any) is used in the cartridge, and
 // if further external hardware exists in the cartridge.
