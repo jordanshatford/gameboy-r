@@ -1,3 +1,4 @@
+mod apu;
 mod cartridges;
 mod memory;
 mod mmu;

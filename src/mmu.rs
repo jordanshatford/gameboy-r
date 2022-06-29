@@ -2,6 +2,7 @@
 
 use std::path::Path;
 
+use crate::apu::APU;
 use crate::cartridges::{self, Cartridge};
 use crate::memory::Memory;
 use crate::ppu::PPU;
@@ -14,6 +15,7 @@ pub enum Speed {
 
 pub struct MMU {
     cartridge: Box<dyn Cartridge>,
+    apu: Option<APU>,
     ppu: PPU,
     speed: Speed,
     interruptes_asserted: u8, // IF
@@ -24,6 +26,7 @@ impl MMU {
     pub fn new(path: impl AsRef<Path>) -> MMU {
         MMU {
             cartridge: cartridges::new(path),
+            apu: None,
             ppu: PPU::new(),
             speed: Speed::Normal,
             interruptes_asserted: 0x00,
@@ -50,7 +53,16 @@ impl Memory for MMU {
             // Invalid OAM region (behavior varies per revision)
             0xFEA0..=0xFEFF => 0x00,
             // Memory mapped I/O
-            0xFF00..=0xFF7F => panic!("memory i/o: not implemented"),
+            0xFF00..=0xFF7F => {
+                match addr {
+                    // Sound Controller (APU)
+                    0xFF10..=0xFF3F => match &self.apu {
+                        Some(apu) => apu.get_byte(addr),
+                        None => 0x00,
+                    },
+                    _ => 0x00,
+                }
+            }
             // High RAM (HRAM)
             0xFF80..=0xFFFE => panic!("hram: not implemented"),
             // IE Register
@@ -76,7 +88,16 @@ impl Memory for MMU {
             // Invalid OAM region (behavior varies per revision)
             0xFEA0..=0xFEFF => {}
             // Memory mapped I/O
-            0xFF00..=0xFF7F => panic!("memory i/o: not implemented"),
+            0xFF00..=0xFF7F => {
+                match addr {
+                    // Sound Controller (APU)
+                    0xFF10..=0xFF3F => self
+                        .apu
+                        .as_mut()
+                        .map_or((), |apu| apu.set_byte(addr, value)),
+                    _ => {}
+                }
+            }
             // High RAM (HRAM)
             0xFF80..=0xFFFE => panic!("hram: not implemented"),
             // IE Register
