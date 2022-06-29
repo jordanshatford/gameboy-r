@@ -67,7 +67,6 @@ impl Memory for MMU {
             0xFF80..=0xFFFE => panic!("hram: not implemented"),
             // IE Register
             0xFFFF => self.interruptes_enabled,
-            _ => panic!("invalid mmu address {:#06X?}", addr),
         }
     }
 
@@ -102,7 +101,6 @@ impl Memory for MMU {
             0xFF80..=0xFFFE => panic!("hram: not implemented"),
             // IE Register
             0xFFFF => self.interruptes_enabled = value,
-            _ => panic!("invalid mmu set address {:#06X?} {}", addr, value),
         }
     }
 }
