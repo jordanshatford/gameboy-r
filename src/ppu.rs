@@ -14,7 +14,6 @@ impl Memory for PPU {
         panic!("ppu: get_byte not implemented")
     }
 
-    // ROM cartridges are read only
     fn set_byte(&mut self, addr: u16, value: u8) {
         panic!("ppu: set_byte not implemented")
     }

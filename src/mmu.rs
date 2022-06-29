@@ -1,6 +1,8 @@
 // https://mgba-emu.github.io/gbdoc/#memory-map
 
-use crate::cartridge::Cartridge;
+use std::path::Path;
+
+use crate::cartridges::{self, Cartridge};
 use crate::memory::Memory;
 use crate::ppu::PPU;
 
@@ -11,17 +13,17 @@ pub enum Speed {
 }
 
 pub struct MMU {
-    cartridge: Cartridge,
+    cartridge: Box<dyn Cartridge>,
     ppu: PPU,
     speed: Speed,
     interruptes_asserted: u8, // IF
-    interruptes_enabled: u8, // IE
+    interruptes_enabled: u8,  // IE
 }
 
 impl MMU {
-    pub fn new() -> MMU {
+    pub fn new(path: impl AsRef<Path>) -> MMU {
         MMU {
-            cartridge: Cartridge::new(),
+            cartridge: cartridges::new(path),
             ppu: PPU::new(),
             speed: Speed::Normal,
             interruptes_asserted: 0x00,
@@ -72,7 +74,7 @@ impl Memory for MMU {
             // Object Attribute Memory (OAM)
             0xFE00..=0xFE9F => self.ppu.set_byte(addr, value),
             // Invalid OAM region (behavior varies per revision)
-            0xFEA0..=0xFEFF => {},
+            0xFEA0..=0xFEFF => {}
             // Memory mapped I/O
             0xFF00..=0xFF7F => panic!("memory i/o: not implemented"),
             // High RAM (HRAM)
