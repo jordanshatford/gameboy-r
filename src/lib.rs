@@ -5,3 +5,4 @@ mod memory;
 mod mmu;
 mod ppu;
 mod registers;
+mod serial;

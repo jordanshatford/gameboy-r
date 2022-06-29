@@ -12,7 +12,7 @@ A Game Boy emulator written in Rust.
   - [ ] Video Display (PPU)
   - [ ] Sound Controller (APU)
   - [ ] Joypad Input
-  - [ ] Serial Data Transfer
+  - [x] Serial Data Transfer
   - [ ] Timer
 - [ ] cartridges
   - [x] None (32KByte ROM only)

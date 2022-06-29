@@ -7,6 +7,7 @@ use crate::cartridges::{self, Cartridge};
 use crate::joypad::Joypad;
 use crate::memory::Memory;
 use crate::ppu::PPU;
+use crate::serial::Serial;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Speed {
@@ -35,6 +36,7 @@ pub struct MMU {
     apu: Option<APU>,
     ppu: PPU,
     joypad: Joypad,
+    serial: Serial,
     speed: Speed,
     interruptes_asserted: u8, // IF
     // FFFF - IE - Interrupt Enable (R/W)
@@ -53,6 +55,7 @@ impl MMU {
             apu: None,
             ppu: PPU::new(),
             joypad: Joypad::new(),
+            serial: Serial::new(),
             speed: Speed::Normal,
             interruptes_asserted: 0x00,
             interruptes_enabled: 0x00,
@@ -82,6 +85,9 @@ impl Memory for MMU {
                 match addr {
                     // P1/JOYP - Joypad (R/W)
                     0xFF00 => self.joypad.get_byte(addr),
+                    // SB - Serial transfer data (R/W)
+                    // SC - Serial Transfer Control (R/W)
+                    0xFF01..=0xFF02 => self.serial.get_byte(addr),
                     // IF - Interrupt Flag (R/W)
                     0xFF0F => self.interruptes_asserted,
                     // Sound Controller (APU)
@@ -120,6 +126,9 @@ impl Memory for MMU {
                 match addr {
                     // P1/JOYP - Joypad (R/W)
                     0xFF00 => self.joypad.set_byte(addr, value),
+                    // SB - Serial transfer data (R/W)
+                    // SC - Serial Transfer Control (R/W)
+                    0xFF01..=0xFF02 => self.serial.set_byte(addr, value),
                     // IF - Interrupt Flag (R/W)
                     0xFF0F => self.interruptes_asserted = value,
                     // Sound Controller (APU)
