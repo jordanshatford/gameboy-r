@@ -88,6 +88,8 @@ impl Memory for MMU {
                     // SB - Serial transfer data (R/W)
                     // SC - Serial Transfer Control (R/W)
                     0xFF01..=0xFF02 => self.serial.get_byte(addr),
+                    // Timer and Divider Registers
+                    0xff04..=0xff07 => panic!("timer: not implemented"),
                     // IF - Interrupt Flag (R/W)
                     0xFF0F => self.interruptes_asserted,
                     // Sound Controller (APU)
@@ -95,6 +97,18 @@ impl Memory for MMU {
                         Some(apu) => apu.get_byte(addr),
                         None => 0x00,
                     },
+                    // LCD Control Register, LCD Status Register,  LCD Position and Scrolling, LCD Monochrome Palettes
+                    0xFF40..=0xFF45 | 0xFF47..=0xFF4b => self.ppu.get_byte(addr),
+                    // KEY1 - CGB Mode Only - Prepare Speed Switch
+                    0xFF4D => panic!("speed switch: not implemented"),
+                    // LCD VRAM Bank (CGB only)
+                    0xFF4F => self.ppu.get_byte(addr),
+                    // LCD VRAM DMA Transfers (CGB only)
+                    0xFF51..=0xFF55 => panic!("hdma: not implemented"),
+                    // LCD Color Palettes (CGB only)
+                    0xFF68..=0xFF6b => self.ppu.get_byte(addr),
+                    // SVBK - CGB Mode Only - WRAM Bank
+                    0xFF70 => panic!("wram bank: not implemented"),
                     _ => 0x00,
                 }
             }
@@ -129,6 +143,8 @@ impl Memory for MMU {
                     // SB - Serial transfer data (R/W)
                     // SC - Serial Transfer Control (R/W)
                     0xFF01..=0xFF02 => self.serial.set_byte(addr, value),
+                    // Timer and Divider Registers
+                    0xff04..=0xff07 => panic!("timer: not implemented"),
                     // IF - Interrupt Flag (R/W)
                     0xFF0F => self.interruptes_asserted = value,
                     // Sound Controller (APU)
@@ -136,6 +152,18 @@ impl Memory for MMU {
                         .apu
                         .as_mut()
                         .map_or((), |apu| apu.set_byte(addr, value)),
+                    // LCD Control Register, LCD Status Register,  LCD Position and Scrolling, LCD Monochrome Palettes
+                    0xFF40..=0xFF45 | 0xFF47..=0xFF4b => self.ppu.set_byte(addr, value),
+                    // KEY1 - CGB Mode Only - Prepare Speed Switch
+                    0xFF4D => panic!("speed switch: not implemented"),
+                    // LCD VRAM Bank (CGB only)
+                    0xFF4F => self.ppu.set_byte(addr, value),
+                    // LCD VRAM DMA Transfers (CGB only)
+                    0xFF51..=0xFF55 => panic!("hdma: not implemented"),
+                    // LCD Color Palettes (CGB only)
+                    0xFF68..=0xFF6b => self.ppu.set_byte(addr, value),
+                    // SVBK - CGB Mode Only - WRAM Bank
+                    0xFF70 => panic!("wram bank: not implemented"),
                     _ => {}
                 }
             }
