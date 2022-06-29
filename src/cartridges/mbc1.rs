@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use crate::cartridges::{BankMode, Cartridge, Stable};
+use crate::cartridges::{Cartridge, Stable};
 use crate::memory::Memory;
 
 // MBC1 (max 2MByte ROM and/or 32KByte RAM)
@@ -52,6 +52,11 @@ use crate::memory::Memory;
 //  01h = RAM Banking Mode (up to 32KByte RAM, 512KByte ROM)
 // The program may freely switch between both modes, the only limitiation is that only RAM Bank 00h can be
 // used during Mode 0, and only ROM Banks 00-1Fh can be used during Mode 1.
+
+pub enum BankMode {
+    Rom,
+    Ram,
+}
 
 pub struct MBC1 {
     rom: Vec<u8>,

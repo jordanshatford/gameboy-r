@@ -9,11 +9,6 @@ use crate::cartridges::mbc1::MBC1;
 use crate::cartridges::none::RomOnly;
 use crate::memory::Memory;
 
-pub enum BankMode {
-    Rom,
-    Ram,
-}
-
 pub trait Stable {
     fn sav(&self);
 }
@@ -201,7 +196,7 @@ pub fn get_ram_size(rom: &Vec<u8>) -> usize {
 }
 
 // Read RAM data from external sav file when available
-fn read_ram_from_sav(path: impl AsRef<Path>, size: usize) -> Vec<u8> {
+pub fn read_ram_from_sav(path: impl AsRef<Path>, size: usize) -> Vec<u8> {
     match File::open(path) {
         Ok(mut f) => {
             let mut ram = Vec::new();
