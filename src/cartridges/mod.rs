@@ -1,11 +1,18 @@
+mod mbc1;
 mod none;
 
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+use crate::cartridges::mbc1::MBC1;
 use crate::cartridges::none::RomOnly;
 use crate::memory::Memory;
+
+pub enum BankMode {
+    Rom,
+    Ram,
+}
 
 pub trait Stable {
     fn sav(&self);
@@ -118,6 +125,17 @@ pub fn new(path: impl AsRef<Path>) -> Box<dyn Cartridge> {
     // the cartridge header.
     let cartridge: Box<dyn Cartridge> = match rom[0x0147] {
         0x00 => Box::new(RomOnly::new(rom)),
+        0x01 => Box::new(MBC1::new(rom, vec![], "")),
+        0x02 => {
+            let ram_size = get_ram_size(rom.as_ref());
+            Box::new(MBC1::new(rom, vec![0; ram_size], ""))
+        }
+        0x03 => {
+            let ram_size = get_ram_size(rom.as_ref());
+            let sav_path = path.as_ref().to_path_buf().with_extension("sav");
+            let ram = read_ram_from_sav(sav_path.clone(), ram_size);
+            Box::new(MBC1::new(rom, ram, sav_path))
+        }
         byte => panic!("cartridge: unsupported type {:#04X?}", byte),
     };
     cartridge.verify_nintendo_logo();
@@ -156,5 +174,40 @@ pub fn get_rom_size(rom: &Vec<u8>) -> usize {
         0x53 => kb_in_bytes * 80,
         0x54 => kb_in_bytes * 96,
         byte => panic!("cartridge: unsupported rom size {:#04X?}", byte),
+    }
+}
+
+// 0149 - RAM Size
+// Specifies the size of the external RAM in the cartridge (if any).
+//  00h - None
+//  01h - 2 KBytes
+//  02h - 8 Kbytes
+//  03h - 32 KBytes (4 banks of 8KBytes each)
+//  04h - 128 KBytes (16 banks of 8KBytes each)
+//  05h - 64 KBytes (8 banks of 8KBytes each)
+// When using a MBC2 chip 00h must be specified in this entry, even though the
+// MBC2 includes a built-in RAM of 512 x 4 bits.
+pub fn get_ram_size(rom: &Vec<u8>) -> usize {
+    let ram_size_addr = 0x149;
+    match rom[ram_size_addr] {
+        0x00 => 0,
+        0x01 => 1024 * 2,
+        0x02 => 1024 * 8,
+        0x03 => 1024 * 32,
+        0x04 => 1024 * 128,
+        0x05 => 1024 * 64,
+        byte => panic!("cartridge: unsupported ram size {:#04X?}", byte),
+    }
+}
+
+// Read RAM data from external sav file when available
+fn read_ram_from_sav(path: impl AsRef<Path>, size: usize) -> Vec<u8> {
+    match File::open(path) {
+        Ok(mut f) => {
+            let mut ram = Vec::new();
+            f.read_to_end(&mut ram).unwrap();
+            ram
+        }
+        Err(_) => vec![0; size],
     }
 }

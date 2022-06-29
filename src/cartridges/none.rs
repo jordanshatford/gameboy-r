@@ -1,5 +1,4 @@
-use crate::cartridges::Cartridge;
-use crate::cartridges::Stable;
+use crate::cartridges::{Cartridge, Stable};
 use crate::memory::Memory;
 
 // This is a 32kB (256kb) ROM and occupies 0000-7FFF.
