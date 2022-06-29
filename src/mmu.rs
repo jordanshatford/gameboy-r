@@ -55,6 +55,8 @@ impl Memory for MMU {
             // Memory mapped I/O
             0xFF00..=0xFF7F => {
                 match addr {
+                    // IF - Interrupt Flag (R/W)
+                    0xFF0F => self.interruptes_asserted,
                     // Sound Controller (APU)
                     0xFF10..=0xFF3F => match &self.apu {
                         Some(apu) => apu.get_byte(addr),
@@ -89,6 +91,8 @@ impl Memory for MMU {
             // Memory mapped I/O
             0xFF00..=0xFF7F => {
                 match addr {
+                    // IF - Interrupt Flag (R/W)
+                    0xFF0F => self.interruptes_asserted = value,
                     // Sound Controller (APU)
                     0xFF10..=0xFF3F => self
                         .apu
