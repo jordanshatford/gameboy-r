@@ -1,2 +1,1 @@
-mod cpu;
-mod mmu;
+mod registers;
