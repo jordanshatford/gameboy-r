@@ -11,6 +11,17 @@ pub trait Stable {
     fn sav(&self);
 }
 
+// These bytes define the bitmap of the Nintendo logo that is displayed when the gameboy gets turned on.
+// The reason for joining is because if the pirates copy the cartridge, they must also copy Nintendo's LOGO,
+// which infringes the trademark law. In the early days, the copyright law is not perfect for the
+// determination of electronic data.
+// The hexdump of this bitmap is:
+const NINTENDO_LOGO: [u8; 48] = [
+    0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B, 0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
+    0x00, 0x08, 0x11, 0x1F, 0x88, 0x89, 0x00, 0x0E, 0xDC, 0xCC, 0x6E, 0xE6, 0xDD, 0xDD, 0xD9, 0x99,
+    0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC, 0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E,
+];
+
 pub trait Cartridge: Memory + Stable + Send {
     // 0134-0143 - Title
     // Title of the game in UPPER CASE ASCII. If it is less than 16 characters then the
@@ -36,11 +47,39 @@ pub trait Cartridge: Memory + Stable + Send {
         let end_addr: u16 = if has_short_title { 0x013E } else { 0x0143 };
         for addr in 0x0134..=end_addr {
             match self.get_byte(addr) {
+                // If it is less than 16 characters then the remaining bytes are filled with 00's.
                 0 => break,
                 byte => buffer.push(byte as char),
             }
         }
         buffer
+    }
+
+    // 0104-0133 - Nintendo Logo
+    // The Game Boy's boot procedure verifies the content of this bitmap (after it has displayed it), and
+    // LOCKS ITSELF UP if these bytes are incorrect. A CGB verifies only the first 18h bytes of the bitmap,
+    // but others (for example a pocket gameboy) verify all 30h bytes.
+    fn verify_nintendo_logo(&self) {
+        for addr in 0x00..0x48 {
+            if self.get_byte(0x0104 + addr as u16) != NINTENDO_LOGO[addr as usize] {
+                panic!("cartridge: could not validate nintendo logo")
+            }
+        }
+    }
+
+    // 014D - Header Checksum
+    // Contains an 8 bit checksum across the cartridge header bytes 0134-014C. The checksum is calculated as follows:
+    //  x=0:FOR i=0134h TO 014Ch:x=x-MEM[i]-1:NEXT
+    // The lower 8 bits of the result must be the same than the value in this entry. The GAME WON'T WORK if
+    // this checksum is incorrect.
+    fn verify_header_checksum(&self) {
+        let mut x: u8 = 0;
+        for addr in 0x0134..0x014D {
+            x = x.wrapping_sub(self.get_byte(addr)).wrapping_sub(1);
+        }
+        if self.get_byte(0x014D) != x {
+            panic!("cartridge: could not validate header checksum")
+        }
     }
 }
 
@@ -66,7 +105,14 @@ pub fn new(path: impl AsRef<Path>) -> Box<dyn Cartridge> {
     let mut file = File::open(path.as_ref()).unwrap();
     let mut rom = Vec::new();
     file.read_to_end(&mut rom).unwrap();
-
+    // An internal information area is located at 0100-014F in each cartridge.
+    if rom.len() < 0x150 {
+        panic!("cartridge: invalid rom size")
+    }
+    let rom_max_size = get_rom_size(rom.as_ref());
+    if rom.len() > rom_max_size {
+        panic!("cartridge: rom size more than max (max: {})", rom_max_size);
+    }
     // In each cartridge, the required (or preferred) MBC type should
     // be specified in the byte at 0147h of the ROM, as described in
     // the cartridge header.
@@ -74,5 +120,41 @@ pub fn new(path: impl AsRef<Path>) -> Box<dyn Cartridge> {
         0x00 => Box::new(RomOnly::new(rom)),
         byte => panic!("cartridge: unsupported type {:#04X?}", byte),
     };
+    cartridge.verify_nintendo_logo();
+    cartridge.verify_header_checksum();
     cartridge
+}
+
+// 0148 - ROM Size
+// Specifies the ROM Size of the cartridge. Typically calculated as "32KB shl N".
+//  00h -  32KByte (no ROM banking)
+//  01h -  64KByte (4 banks)
+//  02h - 128KByte (8 banks)
+//  03h - 256KByte (16 banks)
+//  04h - 512KByte (32 banks)
+//  05h -   1MByte (64 banks)  - only 63 banks used by MBC1
+//  06h -   2MByte (128 banks) - only 125 banks used by MBC1
+//  07h -   4MByte (256 banks)
+//  08h -   8MByte (512 banks)
+//  52h - 1.1MByte (72 banks)
+//  53h - 1.2MByte (80 banks)
+//  54h - 1.5MByte (96 banks)
+pub fn get_rom_size(rom: &Vec<u8>) -> usize {
+    let kb_in_bytes = 16384;
+    let rom_size_addr = 0x148;
+    match rom[rom_size_addr] {
+        0x00 => kb_in_bytes * 2,
+        0x01 => kb_in_bytes * 4,
+        0x02 => kb_in_bytes * 8,
+        0x03 => kb_in_bytes * 16,
+        0x04 => kb_in_bytes * 32,
+        0x05 => kb_in_bytes * 64,
+        0x06 => kb_in_bytes * 128,
+        0x07 => kb_in_bytes * 256,
+        0x08 => kb_in_bytes * 512,
+        0x52 => kb_in_bytes * 72,
+        0x53 => kb_in_bytes * 80,
+        0x54 => kb_in_bytes * 96,
+        byte => panic!("cartridge: unsupported rom size {:#04X?}", byte),
+    }
 }
