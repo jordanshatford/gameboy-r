@@ -48,6 +48,7 @@ pub struct MMU {
     serial: Serial,
     timer: Timer,
     speed: Speed,
+    prepare_speed_switch: bool,
     hram: [u8; HRAM_SIZE],
     wram: [u8; WRAM_SIZE],
     wram_bank: usize,
@@ -74,12 +75,24 @@ impl MMU {
             serial: Serial::new(),
             timer: Timer::new(),
             speed: Speed::Normal,
+            prepare_speed_switch: false,
             hram: [0x00; HRAM_SIZE],
             wram: [0x00; WRAM_SIZE],
             wram_bank: 0x01,
             interruptes_asserted: 0x00,
             interruptes_enabled: 0x00,
         }
+    }
+
+    pub fn perform_speed_switch(&mut self) {
+        if self.prepare_speed_switch {
+            self.speed = if self.speed == Speed::Double {
+                Speed::Normal
+            } else {
+                Speed::Double
+            }
+        }
+        self.prepare_speed_switch = false;
     }
 
     pub fn run_cycles(&mut self, cycles: u32) -> u32 {
@@ -145,7 +158,19 @@ impl Memory for MMU {
                     // LCD Control Register, LCD Status Register,  LCD Position and Scrolling, LCD Monochrome Palettes
                     0xFF40..=0xFF45 | 0xFF47..=0xFF4b => self.ppu.get_byte(addr),
                     // KEY1 - CGB Mode Only - Prepare Speed Switch
-                    0xFF4D => panic!("speed switch: not implemented"),
+                    0xFF4D => {
+                        // Bit 7: Current Speed (0=Normal, 1=Double) (Read Only)
+                        // Bit 0: Prepare Speed Switch (0=No, 1=Prepare) (Read/Write)
+                        let current_speed_bit: u8 = match self.speed {
+                            Speed::Double => 0b1000_0000,
+                            Speed::Normal => 0b0000_0000,
+                        };
+                        let prepare_switch_bit: u8 = match self.prepare_speed_switch {
+                            true => 0b0000_0001,
+                            false => 0b0000_0000,
+                        };
+                        current_speed_bit | prepare_switch_bit
+                    }
                     // LCD VRAM Bank (CGB only)
                     0xFF4F => self.ppu.get_byte(addr),
                     // LCD VRAM DMA Transfers (CGB only)
@@ -212,7 +237,12 @@ impl Memory for MMU {
                     // LCD Control Register, LCD Status Register,  LCD Position and Scrolling, LCD Monochrome Palettes
                     0xFF40..=0xFF45 | 0xFF47..=0xFF4b => self.ppu.set_byte(addr, value),
                     // KEY1 - CGB Mode Only - Prepare Speed Switch
-                    0xFF4D => panic!("speed switch: not implemented"),
+                    0xFF4D => {
+                        // This register is used to prepare the gameboy to switch between CGB Double Speed Mode and Normal Speed Mode.
+                        // The actual speed switch is performed by executing a STOP command after Bit 0 has been set. After that Bit 0
+                        // will be cleared automatically, and the gameboy will operate at the 'other' speed.
+                        self.prepare_speed_switch = (value & 0b0000_0001) == 0b0000_0001;
+                    }
                     // LCD VRAM Bank (CGB only)
                     0xFF4F => self.ppu.set_byte(addr, value),
                     // LCD VRAM DMA Transfers (CGB only)
