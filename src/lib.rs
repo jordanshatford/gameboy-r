@@ -6,3 +6,4 @@ mod mmu;
 mod ppu;
 mod registers;
 mod serial;
+mod timer;
