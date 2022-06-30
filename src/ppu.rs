@@ -1,14 +1,19 @@
 use crate::cartridges::CartridgeMode;
 use crate::memory::Memory;
+use crate::mmu::InterruptFlag;
 
 #[derive(Debug, Copy, Clone)]
 pub struct PPU {
     mode: CartridgeMode,
+    pub interrupt: u8,
 }
 
 impl PPU {
     pub fn new(mode: CartridgeMode) -> PPU {
-        PPU { mode }
+        PPU {
+            mode,
+            interrupt: InterruptFlag::None as u8,
+        }
     }
 
     pub fn run_cycles(&mut self, cycles: u32) {}

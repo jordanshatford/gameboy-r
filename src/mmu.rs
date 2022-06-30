@@ -66,7 +66,7 @@ impl MMU {
     pub fn new(path: impl AsRef<Path>) -> MMU {
         let cartridge = cartridges::new(path);
         let cartridge_mode = cartridge.get_cartridge_mode();
-        MMU {
+        let mut mmu = MMU {
             cartridge: cartridge,
             mode: cartridge_mode,
             apu: None,
@@ -79,9 +79,42 @@ impl MMU {
             hram: [0x00; HRAM_SIZE],
             wram: [0x00; WRAM_SIZE],
             wram_bank: 0x01,
-            interruptes_asserted: 0x00,
+            interruptes_asserted: InterruptFlag::None as u8,
             interruptes_enabled: 0x00,
-        }
+        };
+        // Set initial values
+        mmu.set_byte(0xFF05, 0x00);
+        mmu.set_byte(0xFF06, 0x00);
+        mmu.set_byte(0xFF07, 0x00);
+        mmu.set_byte(0xFF10, 0x80);
+        mmu.set_byte(0xFF11, 0xBF);
+        mmu.set_byte(0xFF12, 0xF3);
+        mmu.set_byte(0xFF14, 0xBF);
+        mmu.set_byte(0xFF16, 0x3F);
+        mmu.set_byte(0xFF16, 0x3F);
+        mmu.set_byte(0xFF17, 0x00);
+        mmu.set_byte(0xFF19, 0xBF);
+        mmu.set_byte(0xFF1A, 0x7F);
+        mmu.set_byte(0xFF1B, 0xFF);
+        mmu.set_byte(0xFF1C, 0x9F);
+        mmu.set_byte(0xFF1E, 0xFF);
+        mmu.set_byte(0xFF20, 0xFF);
+        mmu.set_byte(0xFF21, 0x00);
+        mmu.set_byte(0xFF22, 0x00);
+        mmu.set_byte(0xFF23, 0xbF);
+        mmu.set_byte(0xFF24, 0x77);
+        mmu.set_byte(0xFF25, 0xF3);
+        mmu.set_byte(0xFF26, 0xF1);
+        mmu.set_byte(0xFF40, 0x91);
+        mmu.set_byte(0xFF42, 0x00);
+        mmu.set_byte(0xFF43, 0x00);
+        mmu.set_byte(0xFF45, 0x00);
+        mmu.set_byte(0xFF47, 0xFC);
+        mmu.set_byte(0xFF48, 0xFF);
+        mmu.set_byte(0xFF49, 0xFF);
+        mmu.set_byte(0xFF4A, 0x00);
+        mmu.set_byte(0xFF4B, 0x00);
+        mmu
     }
 
     pub fn perform_speed_switch(&mut self) {
@@ -100,11 +133,25 @@ impl MMU {
         let vram_cycles = 0; // TODO calculate  dma (HDMA, GDMA)
         let ppu_cycles = cycles / cpu_divider + vram_cycles;
         let cpu_cycles = cycles + vram_cycles * cpu_divider;
+
         self.timer.run_cycles(cpu_cycles);
+        self.interruptes_asserted |= self.timer.interrupt;
+        self.timer.interrupt = InterruptFlag::None as u8;
+
+        self.interruptes_asserted |= self.joypad.interrupt;
+        self.joypad.interrupt = InterruptFlag::None as u8;
+
         self.ppu.run_cycles(ppu_cycles);
+        self.interruptes_asserted |= self.ppu.interrupt;
+        self.ppu.interrupt = InterruptFlag::None as u8;
+
         self.apu
             .as_mut()
             .map_or((), |apu| apu.run_cycles(ppu_cycles));
+
+        self.interruptes_asserted |= self.serial.interrupt;
+        self.serial.interrupt = InterruptFlag::None as u8;
+
         ppu_cycles
     }
 }
