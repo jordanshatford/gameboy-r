@@ -69,15 +69,15 @@ impl MMU {
         }
     }
 
-    pub fn run_cycle(&mut self, ticks: u32) -> u32 {
+    pub fn run_cycles(&mut self, cycles: u32) -> u32 {
         let cpu_divider = self.speed as u32;
-        let vram_ticks = 0; // TODO calculate  dma (HDMA, GDMA)
-        let ppu_ticks = ticks / cpu_divider + vram_ticks;
-        let cpu_ticks = ticks + vram_ticks * cpu_divider;
-        self.timer.run_cycle(cpu_ticks);
-        self.ppu.run_cycle(ppu_ticks);
-        self.apu.as_mut().map_or((), |apu| apu.run_cycle(ppu_ticks));
-        ppu_ticks
+        let vram_cycles = 0; // TODO calculate  dma (HDMA, GDMA)
+        let ppu_cycles = cycles / cpu_divider + vram_cycles;
+        let cpu_cycles = cycles + vram_cycles * cpu_divider;
+        self.timer.run_cycles(cpu_cycles);
+        self.ppu.run_cycles(ppu_cycles);
+        self.apu.as_mut().map_or((), |apu| apu.run_cycles(ppu_cycles));
+        ppu_cycles
     }
 }
 

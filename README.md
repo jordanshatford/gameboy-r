@@ -8,10 +8,12 @@ A Game Boy emulator written in Rust.
 - [ ] MMU
   - [ ] Work RAM (WRAM)
   - [ ] High Ram (HRAM)
+  - [ ] HDMA & GDMA
+  - [ ] Speed switch
 - [ ] I/O
   - [ ] Video Display (PPU)
   - [ ] Sound Controller (APU)
-  - [ ] Joypad Input
+  - [x] Joypad Input
   - [x] Serial Data Transfer
   - [ ] Timer
 - [ ] cartridges

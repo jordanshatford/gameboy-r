@@ -11,7 +11,7 @@ impl PPU {
         PPU { mode }
     }
 
-    pub fn run_cycle(&mut self, ticks: u32) {}
+    pub fn run_cycles(&mut self, cycles: u32) {}
 }
 
 impl Memory for PPU {
