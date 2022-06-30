@@ -34,6 +34,7 @@ pub enum InterruptFlag {
 
 // This value (0x7F) is based on the address space available for HRAM (0xFFFE - 0xFF80)
 const HRAM_SIZE: usize = 0x7F;
+const WRAM_SIZE: usize = 0x8000;
 
 pub struct MMU {
     cartridge: Box<dyn Cartridge>,
@@ -44,8 +45,9 @@ pub struct MMU {
     serial: Serial,
     timer: Timer,
     speed: Speed,
-    // This value (0x7F) is based on the address space available for HRAM (0xFFFE - 0xFF80)
     hram: [u8; HRAM_SIZE],
+    wram: [u8; WRAM_SIZE],
+    wram_bank: usize,
     interruptes_asserted: u8, // IF
     // FFFF - IE - Interrupt Enable (R/W)
     // Bit 0: VBlank   Interrupt Enable  (INT $40)  (1=Enable)
@@ -70,6 +72,8 @@ impl MMU {
             timer: Timer::new(),
             speed: Speed::Normal,
             hram: [0x00; HRAM_SIZE],
+            wram: [0x00; WRAM_SIZE],
+            wram_bank: 0x01,
             interruptes_asserted: 0x00,
             interruptes_enabled: 0x00,
         }
@@ -134,7 +138,7 @@ impl Memory for MMU {
                     // LCD Color Palettes (CGB only)
                     0xFF68..=0xFF6b => self.ppu.get_byte(addr),
                     // SVBK - CGB Mode Only - WRAM Bank
-                    0xFF70 => panic!("wram bank: not implemented"),
+                    0xFF70 => self.wram_bank as u8,
                     _ => 0x00,
                 }
             }
@@ -189,7 +193,15 @@ impl Memory for MMU {
                     // LCD Color Palettes (CGB only)
                     0xFF68..=0xFF6b => self.ppu.set_byte(addr, value),
                     // SVBK - CGB Mode Only - WRAM Bank
-                    0xFF70 => panic!("wram bank: not implemented"),
+                    0xFF70 => {
+                        // Writing a value of 01h-07h will select Bank 1-7, writing a value of 00h
+                        // will select Bank 1 either.
+                        // Bit 0-2  Select WRAM Bank (Read/Write)
+                        self.wram_bank = match value & 0x07 {
+                            0x00 => 1,
+                            _ => value as usize,
+                        };
+                    }
                     _ => {}
                 }
             }
