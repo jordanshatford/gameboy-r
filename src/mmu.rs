@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use crate::apu::APU;
-use crate::cartridges::{self, Cartridge};
+use crate::cartridges::{self, Cartridge, CartridgeMode};
 use crate::joypad::Joypad;
 use crate::memory::Memory;
 use crate::ppu::PPU;
@@ -34,6 +34,7 @@ pub enum InterruptFlag {
 
 pub struct MMU {
     cartridge: Box<dyn Cartridge>,
+    mode: CartridgeMode,
     apu: Option<APU>,
     ppu: PPU,
     joypad: Joypad,
@@ -52,10 +53,13 @@ pub struct MMU {
 
 impl MMU {
     pub fn new(path: impl AsRef<Path>) -> MMU {
+        let cartridge = cartridges::new(path);
+        let cartridge_mode = cartridge.get_cartridge_mode();
         MMU {
-            cartridge: cartridges::new(path),
+            cartridge: cartridge,
+            mode: cartridge_mode,
             apu: None,
-            ppu: PPU::new(),
+            ppu: PPU::new(cartridge_mode),
             joypad: Joypad::new(),
             serial: Serial::new(),
             timer: Timer::new(),

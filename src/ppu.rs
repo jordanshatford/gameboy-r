@@ -1,11 +1,14 @@
-use super::memory::Memory;
+use crate::cartridges::CartridgeMode;
+use crate::memory::Memory;
 
 #[derive(Debug, Copy, Clone)]
-pub struct PPU {}
+pub struct PPU {
+    mode: CartridgeMode,
+}
 
 impl PPU {
-    pub fn new() -> PPU {
-        PPU {}
+    pub fn new(mode: CartridgeMode) -> PPU {
+        PPU { mode }
     }
 
     pub fn run_cycle(&mut self, ticks: u32) {}

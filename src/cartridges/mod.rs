@@ -9,6 +9,12 @@ use crate::cartridges::mbc1::MBC1;
 use crate::cartridges::none::RomOnly;
 use crate::memory::Memory;
 
+#[derive(Debug, Copy, Clone)]
+pub enum CartridgeMode {
+    GB,  // Original Game Boy
+    GBC, // Game Boy Color
+}
+
 pub trait Stable {
     fn sav(&self);
 }
@@ -81,6 +87,23 @@ pub trait Cartridge: Memory + Stable + Send {
         }
         if self.get_byte(0x014D) != x {
             panic!("cartridge: could not validate header checksum")
+        }
+    }
+
+    // 0143 - CGB Flag
+    // In older cartridges this byte has been part of the Title (see above). In CGB cartridges
+    // the upper bit is used to enable CGB functions. This is required, otherwise the CGB
+    // switches itself into Non-CGB-Mode. Typical values are:
+    //  80h - Game supports CGB functions, but works on old gameboys also.
+    //  C0h - Game works on CGB only (physically the same as 80h).
+    // Values with Bit 7 set, and either Bit 2 or 3 set, will switch the gameboy into a special
+    // non-CGB-mode with uninitialized palettes. Purpose unknown, eventually this has been
+    // supposed to be used to colorize monochrome games that include fixed palette data at a special
+    // location in ROM.
+    fn get_cartridge_mode(&self) -> CartridgeMode {
+        match self.get_byte(0x0143) & 0x80 {
+            0x80 => CartridgeMode::GBC,
+            _ => CartridgeMode::GB,
         }
     }
 }
