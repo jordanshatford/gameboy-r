@@ -41,7 +41,6 @@ const WRAM_BANK_SIZE: usize = 0x1000;
 
 pub struct MMU {
     cartridge: Box<dyn Cartridge>,
-    mode: CartridgeMode,
     apu: Option<APU>,
     ppu: PPU,
     joypad: Joypad,
@@ -63,12 +62,10 @@ pub struct MMU {
 }
 
 impl MMU {
-    pub fn new(path: impl AsRef<Path>) -> MMU {
-        let cartridge = cartridges::new(path);
+    pub fn new(cartridge: Box<dyn Cartridge>) -> MMU {
         let cartridge_mode = cartridge.get_cartridge_mode();
         let mut mmu = MMU {
             cartridge: cartridge,
-            mode: cartridge_mode,
             apu: None,
             ppu: PPU::new(cartridge_mode),
             joypad: Joypad::new(),
