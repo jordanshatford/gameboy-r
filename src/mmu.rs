@@ -34,7 +34,10 @@ pub enum InterruptFlag {
 
 // This value (0x7F) is based on the address space available for HRAM (0xFFFE - 0xFF80)
 const HRAM_SIZE: usize = 0x7F;
+// C000-CFFF   4KB Work RAM Bank 0 (WRAM)
+// D000-DFFF   4KB Work RAM Bank 1 (WRAM)  (switchable bank 1-7 in CGB Mode)
 const WRAM_SIZE: usize = 0x8000;
+const WRAM_BANK_SIZE: usize = 0x1000;
 
 pub struct MMU {
     cartridge: Box<dyn Cartridge>,
@@ -103,9 +106,21 @@ impl Memory for MMU {
             // External bus (RAM region)
             0xA000..=0xBFFF => self.cartridge.get_byte(addr),
             // WRAM
-            0xC000..=0xDFFF => panic!("wram: not implemented"),
+            0xC000..=0xDFFF => match addr {
+                0xC000..=0xCFFF => self.wram[addr as usize - 0xC000],
+                0xD000..=0xDFFF => {
+                    self.wram[addr as usize - 0xD000 + WRAM_BANK_SIZE * self.wram_bank]
+                }
+                _ => 0x00,
+            },
             // ECHO (WRAM secondary mapping)
-            0xE000..=0xFDFF => panic!("echo: not implemented"),
+            0xE000..=0xFDFF => match addr {
+                0xE000..=0xEFFF => self.wram[addr as usize - 0xE000],
+                0xF000..=0xFDFF => {
+                    self.wram[addr as usize - 0xF000 + WRAM_BANK_SIZE * self.wram_bank]
+                }
+                _ => 0x00,
+            },
             // Object Attribute Memory (OAM)
             0xFE00..=0xFE9F => self.ppu.get_byte(addr),
             // Invalid OAM region (behavior varies per revision)
@@ -158,9 +173,21 @@ impl Memory for MMU {
             // External bus (RAM region)
             0xA000..=0xBFFF => self.cartridge.set_byte(addr, value),
             // WRAM
-            0xC000..=0xDFFF => panic!("wram: not implemented"),
+            0xC000..=0xDFFF => match addr {
+                0xC000..=0xCFFF => self.wram[addr as usize - 0xC000] = value,
+                0xD000..=0xDFFF => {
+                    self.wram[addr as usize - 0xD000 + WRAM_BANK_SIZE * self.wram_bank] = value
+                }
+                _ => {}
+            },
             // ECHO (WRAM secondary mapping)
-            0xE000..=0xFDFF => panic!("echo: not implemented"),
+            0xE000..=0xFDFF => match addr {
+                0xE000..=0xEFFF => self.wram[addr as usize - 0xE000] = value,
+                0xF000..=0xFDFF => {
+                    self.wram[addr as usize - 0xF000 + WRAM_BANK_SIZE * self.wram_bank] = value
+                }
+                _ => {}
+            },
             // Object Attribute Memory (OAM)
             0xFE00..=0xFE9F => self.ppu.set_byte(addr, value),
             // Invalid OAM region (behavior varies per revision)
