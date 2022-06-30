@@ -7,6 +7,8 @@ impl APU {
     pub fn new() -> APU {
         APU {}
     }
+
+    pub fn run_cycle(&mut self, ticks: u32) {}
 }
 
 impl Memory for APU {

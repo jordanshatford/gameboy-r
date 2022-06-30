@@ -7,6 +7,8 @@ impl PPU {
     pub fn new() -> PPU {
         PPU {}
     }
+
+    pub fn run_cycle(&mut self, ticks: u32) {}
 }
 
 impl Memory for PPU {

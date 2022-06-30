@@ -8,6 +8,7 @@ use crate::joypad::Joypad;
 use crate::memory::Memory;
 use crate::ppu::PPU;
 use crate::serial::Serial;
+use crate::timer::Timer;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Speed {
@@ -37,6 +38,7 @@ pub struct MMU {
     ppu: PPU,
     joypad: Joypad,
     serial: Serial,
+    timer: Timer,
     speed: Speed,
     interruptes_asserted: u8, // IF
     // FFFF - IE - Interrupt Enable (R/W)
@@ -56,10 +58,22 @@ impl MMU {
             ppu: PPU::new(),
             joypad: Joypad::new(),
             serial: Serial::new(),
+            timer: Timer::new(),
             speed: Speed::Normal,
             interruptes_asserted: 0x00,
             interruptes_enabled: 0x00,
         }
+    }
+
+    pub fn run_cycle(&mut self, ticks: u32) -> u32 {
+        let cpu_divider = self.speed as u32;
+        let vram_ticks = 0; // TODO calculate  dma (HDMA, GDMA)
+        let ppu_ticks = ticks / cpu_divider + vram_ticks;
+        let cpu_ticks = ticks + vram_ticks * cpu_divider;
+        self.timer.run_cycle(cpu_ticks);
+        self.ppu.run_cycle(ppu_ticks);
+        self.apu.as_mut().map_or((), |apu| apu.run_cycle(ppu_ticks));
+        ppu_ticks
     }
 }
 
@@ -89,7 +103,7 @@ impl Memory for MMU {
                     // SC - Serial Transfer Control (R/W)
                     0xFF01..=0xFF02 => self.serial.get_byte(addr),
                     // Timer and Divider Registers
-                    0xff04..=0xff07 => panic!("timer: not implemented"),
+                    0xff04..=0xff07 => self.timer.get_byte(addr),
                     // IF - Interrupt Flag (R/W)
                     0xFF0F => self.interruptes_asserted,
                     // Sound Controller (APU)
@@ -144,7 +158,7 @@ impl Memory for MMU {
                     // SC - Serial Transfer Control (R/W)
                     0xFF01..=0xFF02 => self.serial.set_byte(addr, value),
                     // Timer and Divider Registers
-                    0xff04..=0xff07 => panic!("timer: not implemented"),
+                    0xff04..=0xff07 => self.timer.set_byte(addr, value),
                     // IF - Interrupt Flag (R/W)
                     0xFF0F => self.interruptes_asserted = value,
                     // Sound Controller (APU)
