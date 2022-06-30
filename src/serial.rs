@@ -92,3 +92,38 @@ impl Memory for Serial {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::InterruptFlag;
+    use super::Memory;
+    use super::Serial;
+
+    #[test]
+    fn serial() {
+        let mut serial = Serial::new();
+        assert_eq!(serial.data, 0x00);
+        assert_eq!(serial.control, 0x00);
+        assert_eq!(serial.interrupt, InterruptFlag::None as u8);
+        serial.set_byte(0xFF01, 0x12);
+        assert_eq!(serial.data, 0x12);
+        assert_eq!(serial.get_byte(0xFF01), 0x12);
+        serial.set_byte(0xFF02, 0x34);
+        assert_eq!(serial.control, 0x34);
+        assert_eq!(serial.get_byte(0xFF02), 0x34);
+    }
+
+    #[test]
+    #[should_panic]
+    fn out_of_range_get_addr() {
+        let serial = Serial::new();
+        serial.get_byte(0x0000);
+    }
+
+    #[test]
+    #[should_panic]
+    fn out_of_range_set_addr() {
+        let mut serial = Serial::new();
+        serial.set_byte(0x0000, 0x00);
+    }
+}
