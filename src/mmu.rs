@@ -32,6 +32,9 @@ pub enum InterruptFlag {
     None = 0b0000_0000,
 }
 
+// This value (0x7F) is based on the address space available for HRAM (0xFFFE - 0xFF80)
+const HRAM_SIZE: usize = 0x7F;
+
 pub struct MMU {
     cartridge: Box<dyn Cartridge>,
     mode: CartridgeMode,
@@ -41,6 +44,8 @@ pub struct MMU {
     serial: Serial,
     timer: Timer,
     speed: Speed,
+    // This value (0x7F) is based on the address space available for HRAM (0xFFFE - 0xFF80)
+    hram: [u8; HRAM_SIZE],
     interruptes_asserted: u8, // IF
     // FFFF - IE - Interrupt Enable (R/W)
     // Bit 0: VBlank   Interrupt Enable  (INT $40)  (1=Enable)
@@ -64,6 +69,7 @@ impl MMU {
             serial: Serial::new(),
             timer: Timer::new(),
             speed: Speed::Normal,
+            hram: [0x00; HRAM_SIZE],
             interruptes_asserted: 0x00,
             interruptes_enabled: 0x00,
         }
@@ -76,7 +82,9 @@ impl MMU {
         let cpu_cycles = cycles + vram_cycles * cpu_divider;
         self.timer.run_cycles(cpu_cycles);
         self.ppu.run_cycles(ppu_cycles);
-        self.apu.as_mut().map_or((), |apu| apu.run_cycles(ppu_cycles));
+        self.apu
+            .as_mut()
+            .map_or((), |apu| apu.run_cycles(ppu_cycles));
         ppu_cycles
     }
 }
@@ -131,7 +139,7 @@ impl Memory for MMU {
                 }
             }
             // High RAM (HRAM)
-            0xFF80..=0xFFFE => panic!("hram: not implemented"),
+            0xFF80..=0xFFFE => self.hram[addr as usize - 0xFF80],
             // IE Register
             0xFFFF => self.interruptes_enabled,
         }
@@ -186,7 +194,7 @@ impl Memory for MMU {
                 }
             }
             // High RAM (HRAM)
-            0xFF80..=0xFFFE => panic!("hram: not implemented"),
+            0xFF80..=0xFFFE => self.hram[addr as usize - 0xFF80] = value,
             // IE Register
             0xFFFF => self.interruptes_enabled = value,
         }
