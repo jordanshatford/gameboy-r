@@ -194,7 +194,7 @@ impl Memory for MMU {
                     // SC - Serial Transfer Control (R/W)
                     0xFF01..=0xFF02 => self.serial.get_byte(addr),
                     // Timer and Divider Registers
-                    0xff04..=0xff07 => self.timer.get_byte(addr),
+                    0xFF04..=0xFF07 => self.timer.get_byte(addr),
                     // IF - Interrupt Flag (R/W)
                     0xFF0F => self.interruptes_asserted,
                     // Sound Controller (APU)
@@ -273,7 +273,7 @@ impl Memory for MMU {
                     // SC - Serial Transfer Control (R/W)
                     0xFF01..=0xFF02 => self.serial.set_byte(addr, value),
                     // Timer and Divider Registers
-                    0xff04..=0xff07 => self.timer.set_byte(addr, value),
+                    0xFF04..=0xFF07 => self.timer.set_byte(addr, value),
                     // IF - Interrupt Flag (R/W)
                     0xFF0F => self.interruptes_asserted = value,
                     // Sound Controller (APU)
@@ -295,7 +295,7 @@ impl Memory for MMU {
                     // LCD VRAM DMA Transfers (CGB only)
                     0xFF51..=0xFF55 => panic!("hdma: not implemented"),
                     // LCD Color Palettes (CGB only)
-                    0xFF68..=0xFF6b => self.ppu.set_byte(addr, value),
+                    0xFF68..=0xFF6B => self.ppu.set_byte(addr, value),
                     // SVBK - CGB Mode Only - WRAM Bank
                     0xFF70 => {
                         // Writing a value of 01h-07h will select Bank 1-7, writing a value of 00h
