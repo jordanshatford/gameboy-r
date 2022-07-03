@@ -1,6 +1,7 @@
 mod apu;
 mod cartridges;
 mod clock;
+mod cpu;
 mod joypad;
 mod memory;
 mod mmu;
