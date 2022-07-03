@@ -1,12 +1,12 @@
 mod mbc1;
-mod none;
+mod rom;
 
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
 use crate::cartridges::mbc1::MBC1;
-use crate::cartridges::none::RomOnly;
+use crate::cartridges::rom::RomOnly;
 use crate::memory::Memory;
 
 #[derive(Debug, Copy, Clone)]
