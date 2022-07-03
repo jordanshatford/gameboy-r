@@ -67,6 +67,119 @@ impl CPU {
     }
 }
 
+// CPU instruction functions
+impl CPU {
+    // Increment register value.
+    // value = A,B,C,D,E,H,L,(HL)
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - Set if carry from bit 3.
+    // C - Not affected.
+    pub fn inst_alu_inc(&mut self, value: u8) -> u8 {
+        let result = value.wrapping_add(1);
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers
+            .set_flag(CpuFlag::H, (value & 0x0F) + 0x01 > 0x0F);
+        result
+    }
+
+    // Decrement register value.
+    // value = A,B,C,D,E,H,L,(HL)
+    //
+    // Flags affected:
+    // Z - Set if reselt is zero.
+    // N - Set (set to true).
+    // H - Set if no borrow from bit 4.
+    // C - Not affected
+    pub fn inst_alu_dec(&mut self, value: u8) -> u8 {
+        let result = value.wrapping_sub(1);
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, true);
+        self.registers
+            .set_flag(CpuFlag::H, value.trailing_zeros() >= 4);
+        result
+    }
+
+    // Rotate value left. Old bit 7 to Carry flag.
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - Contains old bit 7 data.
+    pub fn inst_alu_rlc(&mut self, value: u8) -> u8 {
+        let has_carry = (value & 0x80) >> 7 == 0x01;
+        let result = (value << 1) | (has_carry as u8);
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, has_carry);
+        result
+    }
+
+    // Rotate value right. Old bit 0 to Carry flag.
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - Contains old bit 0 data
+    pub fn inst_alu_rrc(&mut self, value: u8) -> u8 {
+        let has_carry = value & 0x01 == 0x01;
+        let result = if has_carry {
+            0x80 | (value >> 1)
+        } else {
+            value >> 1
+        };
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, has_carry);
+        result
+    }
+
+    // Add value to A.
+    // value = A,B,C,D,E,H,L,(HL),#
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - Set if carry from bit 3.
+    // C - Set if carry from bit 7.
+    pub fn inst_alu_add(&mut self, value: u8) {
+        let curr = self.registers.a;
+        let result = curr.wrapping_add(value);
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers
+            .set_flag(CpuFlag::H, (curr & 0x0F) + (value & 0x0F) > 0x0F);
+        self.registers
+            .set_flag(CpuFlag::C, (curr as u16) + (value as u16) > 0xFF);
+        self.registers.a = result;
+    }
+
+    // Add value to HL
+    // value = BC,DE,HL,SP
+    //
+    // Flags affected:
+    // Z - Not affected.
+    // N - unset (set to false).
+    // H - Set if carry from bit 11.
+    // C - Set if carry from bit 15.
+    pub fn inst_alu_add_hl(&mut self, value: u16) {
+        let curr = self.registers.hl();
+        let result = curr.wrapping_add(value);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers
+            .set_flag(CpuFlag::H, (curr & 0x0FFF) + (value & 0x0FFF) > 0x0FFF);
+        self.registers.set_flag(CpuFlag::C, curr > 0xFFFF - value);
+        self.registers.set_hl(result);
+    }
+}
+
 // CPU OP Code Mapping
 impl CPU {
     fn execute(&mut self, op_code: u8) {
@@ -74,68 +187,155 @@ impl CPU {
             // NOP
             0x00 => {}
             // LD BC, d16
-            0x01 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x02 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x03 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x04 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x05 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x06 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x07 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x08 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x09 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x0A => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x0B => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x0C => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x0D => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x0E => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x0F => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x10 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            0x11 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x01 => {
+                let value = self.get_word_at_pc();
+                self.registers.set_bc(value);
+            }
+            // LC (BC), A
+            0x02 => {
+                self.set_byte_in_memory(self.registers.bc(), self.registers.a);
+            }
+            // INC BC
+            0x03 => {
+                let value = self.registers.bc().wrapping_add(1);
+                self.registers.set_bc(value);
+            }
+            // INC B
+            0x04 => self.registers.b = self.inst_alu_inc(self.registers.b),
+            // DEC B
+            0x05 => self.registers.b = self.inst_alu_dec(self.registers.b),
+            // LD B, d8
+            0x06 => self.registers.b = self.get_byte_at_pc(),
+            // RLCA
+            0x07 => {
+                self.registers.a = self.inst_alu_rlc(self.registers.a);
+                // Z flag should be unset (set to false)
+                self.registers.set_flag(CpuFlag::Z, false);
+            }
+            // LD (d16), SP
+            0x08 => {
+                let addr = self.get_word_at_pc();
+                self.set_word_in_memory(addr, self.registers.sp);
+            }
+            // ADD HL, BC
+            0x09 => self.inst_alu_add_hl(self.registers.bc()),
+            // LD A, (BC)
+            0x0A => self.registers.a = self.get_byte_in_memory(self.registers.bc()),
+            // DEC BC
+            0x0B => {
+                let value = self.registers.bc().wrapping_sub(1);
+                self.registers.set_bc(value)
+            }
+            // INC C
+            0x0C => self.registers.c = self.inst_alu_inc(self.registers.c),
+            // DEC C
+            0x0D => self.registers.c = self.inst_alu_dec(self.registers.c),
+            // LD C, d8
+            0x0E => self.registers.c = self.get_byte_at_pc(),
+            // RRCA
+            0x0F => {
+                self.registers.a = self.inst_alu_rrc(self.registers.a);
+                // Z flag should be unset (set to false)
+                self.registers.set_flag(CpuFlag::Z, false);
+            }
+            // STOP
+            0x10 => self.stopped = true,
+            // LD DE, d16
+            0x11 => {
+                let value = self.get_word_at_pc();
+                self.registers.set_de(value);
+            }
+            // LD (DE), A
             0x12 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // INC DE
             0x13 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // INC D
             0x14 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // DEC D
             0x15 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD D, d8
             0x16 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // RLA
             0x17 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // JR r8
             0x18 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // ADD HL, DE
             0x19 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD A, (DE)
             0x1A => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // DEC DE
             0x1B => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // INC E
             0x1C => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // DEC E
             0x1D => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD E, d8
             0x1E => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // RRA
             0x1F => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // JR NZ, r8
             0x20 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD HL, d16
             0x21 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD (HL+), A
             0x22 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // INC HL
             0x23 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // INC H
             0x24 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // DEC H
             0x25 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD H, d8
             0x26 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // DAA
             0x27 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // JR Z, r8
             0x28 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // ADD HL, HL
             0x29 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD A, (HL+)
             0x2A => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // DEC HL
             0x2B => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // INC L
             0x2C => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // DEC L
             0x2D => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD L, d8
             0x2E => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // CPL
             0x2F => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // JR NC, r8
             0x30 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD SP, d16
             0x31 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD (HL-), A
             0x32 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // INC SP
             0x33 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // INC (HL)
             0x34 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // DEC (HL)
             0x35 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD (HL), d8
             0x36 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // SCF
             0x37 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // JR C, r8
             0x38 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // ADD HL, SP
             0x39 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD A, (HL-)
             0x3A => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // DEC SP
             0x3B => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // INC A
             0x3C => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // DEC A
             0x3D => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // LD A, d8
             0x3E => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            // CCF
             0x3F => panic!("cpu: OP code not implemented {:#04X?}", op_code),
             0x40 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
             0x41 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
