@@ -26,6 +26,7 @@ pub struct CPU {
     pub memory: Rc<RefCell<dyn Memory>>,
     pub halted: bool,
     pub stopped: bool,
+    pub ei: bool,
 }
 
 impl CPU {
@@ -35,6 +36,7 @@ impl CPU {
             memory,
             halted: false,
             stopped: false,
+            ei: false,
         }
     }
 
@@ -66,6 +68,17 @@ impl CPU {
 
     pub fn set_word_in_memory(&mut self, addr: u16, value: u16) {
         self.memory.borrow_mut().set_word(addr, value);
+    }
+
+    pub fn add_to_stack(&mut self, value: u16) {
+        self.registers.sp += 2;
+        self.set_word_in_memory(self.registers.sp, value);
+    }
+
+    pub fn pop_stack(&mut self) -> u16 {
+        let result = self.get_word_in_memory(self.registers.sp);
+        self.registers.sp += 2;
+        result
     }
 }
 

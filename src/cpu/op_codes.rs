@@ -548,94 +548,216 @@ impl CPU {
             // CP A
             0xBF => self.inst_alu_cp(self.registers.a),
             // RET NZ
-            0xC0 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xC0 => {
+                // Not Zero
+                if !self.registers.has_flag(CpuFlag::Z) {
+                    self.registers.pc = self.pop_stack();
+                }
+            }
             // POP BC
-            0xC1 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xC1 => {
+                let value = self.pop_stack();
+                self.registers.set_bc(value);
+            }
             // JP NZ, a16
-            0xC2 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xC2 => {
+                let pc = self.get_word_at_pc();
+                if !self.registers.has_flag(CpuFlag::Z) {
+                    self.registers.pc = pc;
+                }
+            }
             // JP a16
-            0xC3 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
-            // CALL NX, a16
-            0xC4 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xC3 => self.registers.pc = self.get_word_at_pc(),
+            // CALL NZ, a16
+            0xC4 => {
+                let n = self.get_word_at_pc();
+                if !self.registers.has_flag(CpuFlag::Z) {
+                    self.add_to_stack(self.registers.pc);
+                    self.registers.pc = n;
+                }
+            }
             // PUSH BC
-            0xC5 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xC5 => self.add_to_stack(self.registers.bc()),
             // ADD A, d8
-            0xC6 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xC6 => {
+                let value = self.get_byte_at_pc();
+                self.inst_alu_add(value);
+            }
             // RST 00H
-            0xC7 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xC7 => {
+                self.add_to_stack(self.registers.pc);
+                self.registers.pc = 0x00;
+            }
             // RET Z
-            0xC8 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xC8 => {
+                // Not Zero
+                if self.registers.has_flag(CpuFlag::Z) {
+                    self.registers.pc = self.pop_stack();
+                }
+            }
             // RET
-            0xC9 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xC9 => self.registers.pc = self.pop_stack(),
             // JP Z, a16
-            0xCA => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xCA => {
+                let pc = self.get_word_at_pc();
+                if self.registers.has_flag(CpuFlag::Z) {
+                    self.registers.pc = pc;
+                }
+            }
             // PREFIX CB
             0xCB => {
                 let cb_code = self.get_byte_at_pc();
                 return self.execute_cb(cb_code);
             }
             // CALL Z, a16
-            0xCC => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xCC => {
+                let n = self.get_word_at_pc();
+                if self.registers.has_flag(CpuFlag::Z) {
+                    self.add_to_stack(self.registers.pc);
+                    self.registers.pc = n;
+                }
+            }
             // CALL a16
-            0xCD => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xCD => {
+                let n = self.get_word_at_pc();
+                self.add_to_stack(self.registers.pc);
+                self.registers.pc = n;
+            }
             // ADC A, d8
-            0xCE => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xCE => {
+                let value = self.get_byte_at_pc();
+                self.inst_alu_adc(value);
+            }
             // RST 08H
-            0xCF => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xCF => {
+                self.add_to_stack(self.registers.pc);
+                self.registers.pc = 0x08;
+            }
             // RET NC
-            0xD0 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xD0 => {
+                // Not Carry
+                if !self.registers.has_flag(CpuFlag::C) {
+                    self.registers.pc = self.pop_stack();
+                }
+            }
             // POP DE
-            0xD1 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xD1 => {
+                let value = self.pop_stack();
+                self.registers.set_de(value);
+            }
             // JP NC, a16
-            0xD2 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xD2 => {
+                let pc = self.get_word_at_pc();
+                if !self.registers.has_flag(CpuFlag::C) {
+                    self.registers.pc = pc;
+                }
+            }
             // Not Valid
             0xD3 => panic!("cpu: invalid op code 0xD3"),
             // CALL NC, a16
-            0xD4 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xD4 => {
+                let n = self.get_word_at_pc();
+                if !self.registers.has_flag(CpuFlag::C) {
+                    self.add_to_stack(self.registers.pc);
+                    self.registers.pc = n;
+                }
+            }
             // PUSH DE
-            0xD5 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xD5 => self.add_to_stack(self.registers.de()),
             // SUB d8
-            0xD6 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xD6 => {
+                let value = self.get_byte_at_pc();
+                self.inst_alu_sub(value);
+            }
             // RST 10H
-            0xD7 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xD7 => {
+                self.add_to_stack(self.registers.pc);
+                self.registers.pc = 0x10;
+            }
             // RET C
-            0xD8 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xD8 => {
+                // Carry
+                if self.registers.has_flag(CpuFlag::C) {
+                    self.registers.pc = self.pop_stack();
+                }
+            }
             // RETI
-            0xD9 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xD9 => {
+                self.registers.pc = self.pop_stack();
+                self.ei = true;
+            }
             // JP C, a16
-            0xDA => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xDA => {
+                let pc = self.get_word_at_pc();
+                if self.registers.has_flag(CpuFlag::C) {
+                    self.registers.pc = pc;
+                }
+            }
             // Not Valid
             0xDB => panic!("cpu: invalid op code 0xDB"),
             // CALL C, a16
-            0xDC => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xDC => {
+                let n = self.get_word_at_pc();
+                if self.registers.has_flag(CpuFlag::C) {
+                    self.add_to_stack(self.registers.pc);
+                    self.registers.pc = n;
+                }
+            }
             // Not Valid
             0xDD => panic!("cpu: invalid op code 0xDD"),
             // SBC A, d8
-            0xDE => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xDE => {
+                let value = self.get_byte_at_pc();
+                self.inst_alu_sbc(value);
+            }
             // RST 18H
-            0xDF => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xDF => {
+                self.add_to_stack(self.registers.pc);
+                self.registers.pc = 0x18;
+            }
             // LDH (a8), A
-            0xE0 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xE0 => {
+                let addr = 0xFF00 | (self.get_byte_at_pc() as u16);
+                self.set_byte_in_memory(addr, self.registers.a);
+            }
             // POP HL
-            0xE1 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xE1 => {
+                let value = self.pop_stack();
+                self.registers.set_hl(value);
+            }
             // LD (C), A
-            0xE2 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xE2 => {
+                let addr = 0xFF00 | (self.registers.c as u16);
+                self.set_byte_in_memory(addr, self.registers.a);
+            }
             // Not Valid
             0xE3 => panic!("cpu: invalid op code 0xE3"),
             // Not Valid
             0xE4 => panic!("cpu: invalid op code 0xE4"),
             // PUSH HL
-            0xE5 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xE5 => self.add_to_stack(self.registers.hl()),
             // AND d8
-            0xE6 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xE6 => {
+                let value = self.get_byte_at_pc();
+                self.inst_alu_and(value);
+            }
             // RST 20H
-            0xE7 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xE7 => {
+                self.add_to_stack(self.registers.pc);
+                self.registers.pc = 0x20;
+            }
             // ADD SP, r8
-            0xE8 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xE8 => {
+                let value = self.get_byte_at_pc();
+                self.inst_alu_add_sp(value);
+            }
             // JP (HL)
-            0xE9 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xE9 => self.registers.pc = self.registers.hl(),
             // LD (a16), A
-            0xEA => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xEA => {
+                let addr = self.get_word_at_pc();
+                self.set_byte_in_memory(addr, self.registers.a);
+            }
             // Not Valid
             0xEB => panic!("cpu: invalid op code 0xEB"),
             // Not Valid
@@ -643,41 +765,81 @@ impl CPU {
             // Not Valid
             0xED => panic!("cpu: invalid op code 0xED"),
             // XOR d8
-            0xEE => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xEE => {
+                let value = self.get_byte_at_pc();
+                self.inst_alu_xor(value);
+            }
             // RST 28H
-            0xEF => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xEF => {
+                self.add_to_stack(self.registers.pc);
+                self.registers.pc = 0x28;
+            }
             // LDH A, (a8)
-            0xF0 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xF0 => {
+                let addr = 0xFF00 | (self.get_byte_at_pc() as u16);
+                self.registers.a = self.get_byte_in_memory(addr);
+            }
             // POP AF
-            0xF1 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xF1 => {
+                let value = self.pop_stack();
+                self.registers.set_af(value);
+            }
             // LD A, (C)
-            0xF2 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xF2 => {
+                let addr = 0xFF00 | (self.registers.c as u16);
+                self.registers.a = self.get_byte_in_memory(addr);
+            }
             // DI
-            0xF3 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xF3 => self.ei = false,
             // Not Valid
             0xF4 => panic!("cpu: invalid op code 0xF4"),
             // PUSH AF
-            0xF5 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xF5 => self.add_to_stack(self.registers.af()),
             // OR d8
-            0xF6 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xF6 => {
+                let value = self.get_byte_at_pc();
+                self.inst_alu_or(value);
+            }
             // RST 30H
-            0xF7 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xF7 => {
+                self.add_to_stack(self.registers.pc);
+                self.registers.pc = 0x30;
+            }
             // LD HL, SP+r8
-            0xF8 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xF8 => {
+                let sp = self.registers.sp;
+                let value = i16::from(self.get_byte_at_pc() as i8) as u16;
+                self.registers.set_flag(CpuFlag::Z, false);
+                self.registers.set_flag(CpuFlag::N, false);
+                self.registers
+                    .set_flag(CpuFlag::H, (sp & 0x000F) + (value & 0x000F) > 0x000F);
+                self.registers
+                    .set_flag(CpuFlag::C, (sp & 0x00FF) + (value & 0x00FF) > 0x00FF);
+                self.registers.set_hl(sp.wrapping_add(value));
+            }
             // LD SP, HL
-            0xF9 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xF9 => self.registers.sp = self.registers.hl(),
             // LD A, (a16)
-            0xFA => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xFA => {
+                let addr = self.get_word_at_pc();
+                self.registers.a = self.get_byte_in_memory(addr);
+            }
             // EI
-            0xFB => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xFB => self.ei = true,
             // Not Valid
             0xFC => panic!("cpu: invalid op code 0xFC"),
             // Not Valid
             0xFD => panic!("cpu: invalid op code 0xFD"),
             // CP d8
-            0xFE => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xFE => {
+                let value = self.get_byte_at_pc();
+                self.inst_alu_cp(value);
+            }
             // RST 38H
-            0xFF => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xFF => {
+                self.add_to_stack(self.registers.pc);
+                self.registers.pc = 0x38;
+            }
         }
         panic!("cpu: num cycles returned not implemented")
     }

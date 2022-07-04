@@ -302,7 +302,6 @@ impl CPU {
         self.registers.a = result;
     }
 
-
     // Logically AND value with A, result in A.
     // value = A,B,C,D,E,H,L,(HL),#
     //
@@ -320,7 +319,6 @@ impl CPU {
         self.registers.a = result;
     }
 
-
     // Logical exclusive OR value with register A, result in A.
     // value = A,B,C,D,E,H,L,(HL),#
     //
@@ -337,7 +335,6 @@ impl CPU {
         self.registers.set_flag(CpuFlag::C, false);
         self.registers.a = result;
     }
-
 
     // Logical OR value with register A, result in A.
     // value = A,B,C,D,E,H,L,(HL),#
@@ -369,5 +366,25 @@ impl CPU {
         let curr = self.registers.a;
         self.inst_alu_sub(value);
         self.registers.a = curr;
+    }
+
+    // Add value to Stack Pointer (SP).
+    // value = one byte signed immediate value (#).
+    //
+    // Flags affected:
+    // Z - unset (set to false).
+    // N - unset (set to false).
+    // H - Set or unset according to operation.
+    // C - Set or unset according to operation.
+    pub fn inst_alu_add_sp(&mut self, value: u8) {
+        let curr = self.registers.sp;
+        let val = i16::from(value as i8) as u16;
+        self.registers.set_flag(CpuFlag::Z, false);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers
+            .set_flag(CpuFlag::H, (curr & 0x000F) + (val & 0x000F) > 0x000F);
+        self.registers
+            .set_flag(CpuFlag::C, (curr & 0x00FF) + (val & 0x00FF) > 0x00FF);
+        self.registers.sp = curr.wrapping_add(val);
     }
 }
