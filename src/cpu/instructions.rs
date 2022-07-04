@@ -37,6 +37,23 @@ impl CPU {
         result
     }
 
+    // Rotate value left through Carry flag.
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - Contains old bit 7 data.
+    pub fn inst_alu_rl(&mut self, value: u8) -> u8 {
+        let has_carry = (value & 0x80) >> 7 == 0x01;
+        let result = (value << 1) + (self.registers.has_flag(CpuFlag::C) as u8);
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, has_carry);
+        result
+    }
+
     // Rotate value left. Old bit 7 to Carry flag.
     //
     // Flags affected:
@@ -47,6 +64,27 @@ impl CPU {
     pub fn inst_alu_rlc(&mut self, value: u8) -> u8 {
         let has_carry = (value & 0x80) >> 7 == 0x01;
         let result = (value << 1) | (has_carry as u8);
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, has_carry);
+        result
+    }
+
+    // Rotate value right through Carry flag.
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - Contains old bit 0 data.
+    pub fn inst_alu_rr(&mut self, value: u8) -> u8 {
+        let has_carry = value & 0x01 == 0x01;
+        let result = if self.registers.has_flag(CpuFlag::C) {
+            0x80 | (value >> 1)
+        } else {
+            value >> 1
+        };
         self.registers.set_flag(CpuFlag::Z, result == 0x00);
         self.registers.set_flag(CpuFlag::N, false);
         self.registers.set_flag(CpuFlag::H, false);
@@ -95,6 +133,31 @@ impl CPU {
         self.registers.a = result;
     }
 
+    // Add value + Carry flag to A.
+    // value = A,B,C,D,E,H,L,(HL),#
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - Set if carry from bit 3.
+    // C - Set if carry from bit 7.
+    pub fn inst_alu_adc(&mut self, value: u8) {
+        let curr = self.registers.a;
+        let carry = u8::from(self.registers.has_flag(CpuFlag::C));
+        let result = curr.wrapping_add(value).wrapping_add(carry);
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(
+            CpuFlag::H,
+            (curr & 0x0F) + (value & 0x0F) + (carry & 0x0F) > 0x0F,
+        );
+        self.registers.set_flag(
+            CpuFlag::C,
+            (curr as u16) + (value as u16) + (carry as u16) > 0xFF,
+        );
+        self.registers.a = result;
+    }
+
     // Add value to HL
     // value = BC,DE,HL,SP
     //
@@ -111,5 +174,88 @@ impl CPU {
             .set_flag(CpuFlag::H, (curr & 0x0FFF) + (value & 0x0FFF) > 0x0FFF);
         self.registers.set_flag(CpuFlag::C, curr > 0xFFFF - value);
         self.registers.set_hl(result);
+    }
+
+    // Add n to current address and jump to it.
+    // n = one byte signed immediate value
+    pub fn inst_alu_jr(&mut self, n: u8) {
+        let n = n as i8;
+        self.registers.pc = ((u32::from(self.registers.pc) as i32) + i32::from(n)) as u16;
+    }
+
+    // Decimal adjust register A. This instruction adjusts register A so that the correct
+    // representation of Binary Coded Decimal (BCD) is obtained.
+    //
+    // Flags affected:
+    // Z - Set if register A is zero.
+    // N - Not affected.
+    // H - unset (set to false).
+    // C - Set or reset according to operation
+    pub fn inst_alu_daa(&mut self) {
+        let mut a = self.registers.a;
+        let mut adjust = if self.registers.has_flag(CpuFlag::C) {
+            0x60
+        } else {
+            0x00
+        };
+        if self.registers.has_flag(CpuFlag::H) {
+            adjust |= 0x06;
+        };
+        if !self.registers.has_flag(CpuFlag::N) {
+            if a & 0x0F > 0x09 {
+                adjust |= 0x06;
+            };
+            if a > 0x99 {
+                adjust |= 0x60;
+            };
+            a = a.wrapping_add(adjust);
+        } else {
+            a = a.wrapping_sub(adjust);
+        }
+        self.registers.set_flag(CpuFlag::Z, a == 0x00);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, adjust >= 0x60);
+        self.registers.a = a;
+    }
+
+    // Complement A register. (Flip all bits.)
+    //
+    // Flags affected:
+    // Z - Not affected.
+    // N - Set.
+    // H - Set.
+    // C - Not affected.
+    pub fn inst_alu_cpl(&mut self) {
+        self.registers.a = !self.registers.a;
+        self.registers.set_flag(CpuFlag::N, true);
+        self.registers.set_flag(CpuFlag::H, true);
+    }
+
+    // Set Carry flag.
+    //
+    // Flags affected:
+    // Z - Not affected.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - Set.
+    pub fn inst_alu_scf(&mut self) {
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, true);
+    }
+
+    // Complement carry flag. If C flag is set, then reset it. If C flag is
+    // reset, then set it.
+    //
+    // Flags affected:
+    // Z - Not affected.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - Complemented.
+    pub fn inst_alu_ccf(&mut self) {
+        let value = !self.registers.has_flag(CpuFlag::C);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, value);
     }
 }
