@@ -129,13 +129,13 @@ impl Registers {
         self.l = (value & 0x00FF) as u8;
     }
 
-    pub fn inc_hl(&mut self) -> u16 {
+    pub fn hl_then_inc(&mut self) -> u16 {
         let res = self.hl();
         self.set_hl(res + 1);
         res
     }
 
-    pub fn dec_hl(&mut self) -> u16 {
+    pub fn hl_then_dec(&mut self) -> u16 {
         let res = self.hl();
         self.set_hl(res - 1);
         res
@@ -227,10 +227,10 @@ mod test {
         let mut reg = Registers::new(CartridgeMode::GB);
         reg.set_hl(0x1234);
         assert_eq!(reg.hl(), 0x1234);
-        assert_eq!(reg.dec_hl(), 0x1234);
-        assert_eq!(reg.dec_hl(), 0x1233);
-        assert_eq!(reg.inc_hl(), 0x1232);
-        assert_eq!(reg.inc_hl(), 0x1233);
+        assert_eq!(reg.hl_then_dec(), 0x1234);
+        assert_eq!(reg.hl_then_dec(), 0x1233);
+        assert_eq!(reg.hl_then_inc(), 0x1232);
+        assert_eq!(reg.hl_then_inc(), 0x1233);
         assert_eq!(reg.hl(), 0x1234);
     }
 
