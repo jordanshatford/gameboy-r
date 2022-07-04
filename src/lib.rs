@@ -6,6 +6,5 @@ mod joypad;
 mod memory;
 mod mmu;
 mod ppu;
-mod registers;
 mod serial;
 mod timer;
