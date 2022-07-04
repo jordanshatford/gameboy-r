@@ -434,101 +434,119 @@ impl CPU {
             // ADC A, A
             0x8F => self.inst_alu_adc(self.registers.a),
             // SUB B
-            0x90 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x90 => self.inst_alu_sub(self.registers.b),
             // SUB C
-            0x91 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x91 => self.inst_alu_sub(self.registers.c),
             // SUB D
-            0x92 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x92 => self.inst_alu_sub(self.registers.d),
             // SUB E
-            0x93 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x93 => self.inst_alu_sub(self.registers.e),
             // SUB H
-            0x94 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x94 => self.inst_alu_sub(self.registers.h),
             // SUB L
-            0x95 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x95 => self.inst_alu_sub(self.registers.l),
             // SUB (HL)
-            0x96 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x96 => {
+                let value = self.get_byte_in_memory(self.registers.hl());
+                self.inst_alu_sub(value);
+            }
             // SUB A
-            0x97 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x97 => self.inst_alu_sub(self.registers.a),
             // SBC A, B
-            0x98 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x98 => self.inst_alu_sbc(self.registers.b),
             // SBC A, C
-            0x99 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x99 => self.inst_alu_sbc(self.registers.c),
             // SBC A, D
-            0x9A => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x9A => self.inst_alu_sbc(self.registers.d),
             // SBC A, E
-            0x9B => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x9B => self.inst_alu_sbc(self.registers.e),
             // SBC A, H
-            0x9C => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x9C => self.inst_alu_sbc(self.registers.h),
             // SBC A, L
-            0x9D => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x9D => self.inst_alu_sbc(self.registers.l),
             // SBC A, (HL)
-            0x9E => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x9E => {
+                let value = self.get_byte_in_memory(self.registers.hl());
+                self.inst_alu_sbc(value);
+            }
             // SBC A, A
-            0x9F => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0x9F => self.inst_alu_sbc(self.registers.a),
             // AND B
-            0xA0 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xA0 => self.inst_alu_and(self.registers.b),
             // AND C
-            0xA1 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xA1 => self.inst_alu_and(self.registers.c),
             // AND D
-            0xA2 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xA2 => self.inst_alu_and(self.registers.d),
             // AND E
-            0xA3 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xA3 => self.inst_alu_and(self.registers.e),
             // AND H
-            0xA4 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xA4 => self.inst_alu_and(self.registers.h),
             // AND L
-            0xA5 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xA5 => self.inst_alu_and(self.registers.l),
             // AND (HL)
-            0xA6 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xA6 => {
+                let value = self.get_byte_in_memory(self.registers.hl());
+                self.inst_alu_and(value);
+            }
             // AND A
-            0xA7 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xA7 => self.inst_alu_and(self.registers.a),
             // XOR B
-            0xA8 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xA8 => self.inst_alu_xor(self.registers.b),
             // XOR C
-            0xA9 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xA9 => self.inst_alu_xor(self.registers.c),
             // XOR D
-            0xAA => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xAA => self.inst_alu_xor(self.registers.d),
             // XOR E
-            0xAB => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xAB => self.inst_alu_xor(self.registers.e),
             // XOR H
-            0xAC => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xAC => self.inst_alu_xor(self.registers.h),
             // XOR L
-            0xAD => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xAD => self.inst_alu_xor(self.registers.l),
             // XOR (HL)
-            0xAE => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xAE => {
+                let value = self.get_byte_in_memory(self.registers.hl());
+                self.inst_alu_xor(value);
+            }
             // XOR A
-            0xAF => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xAF => self.inst_alu_xor(self.registers.a),
             // OR B
-            0xB0 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xB0 => self.inst_alu_or(self.registers.b),
             // OR C
-            0xB1 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xB1 => self.inst_alu_or(self.registers.c),
             // OR D
-            0xB2 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xB2 => self.inst_alu_or(self.registers.d),
             // OR E
-            0xB3 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xB3 => self.inst_alu_or(self.registers.e),
             // OR H
-            0xB4 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xB4 => self.inst_alu_or(self.registers.h),
             // OR L
-            0xB5 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xB5 => self.inst_alu_or(self.registers.l),
             // OR (HL)
-            0xB6 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xB6 => {
+                let value = self.get_byte_in_memory(self.registers.hl());
+                self.inst_alu_or(value);
+            }
             // OR A
-            0xB7 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xB7 => self.inst_alu_or(self.registers.a),
             // CP B
-            0xB8 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xB8 => self.inst_alu_cp(self.registers.b),
             // CP C
-            0xB9 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xB9 => self.inst_alu_cp(self.registers.c),
             // CP D
-            0xBA => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xBA => self.inst_alu_cp(self.registers.d),
             // CP E
-            0xBB => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xBB => self.inst_alu_cp(self.registers.e),
             // CP H
-            0xBC => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xBC => self.inst_alu_cp(self.registers.h),
             // CP L
-            0xBD => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xBD => self.inst_alu_cp(self.registers.l),
             // CP (HL)
-            0xBE => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xBE => {
+                let value = self.get_byte_in_memory(self.registers.hl());
+                self.inst_alu_cp(value);
+            }
             // CP A
-            0xBF => panic!("cpu: OP code not implemented {:#04X?}", op_code),
+            0xBF => self.inst_alu_cp(self.registers.a),
             // RET NZ
             0xC0 => panic!("cpu: OP code not implemented {:#04X?}", op_code),
             // POP BC
@@ -554,7 +572,7 @@ impl CPU {
             // PREFIX CB
             0xCB => {
                 let cb_code = self.get_byte_at_pc();
-                self.execute_cb(cb_code);
+                return self.execute_cb(cb_code);
             }
             // CALL Z, a16
             0xCC => panic!("cpu: OP code not implemented {:#04X?}", op_code),

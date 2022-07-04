@@ -133,6 +133,26 @@ impl CPU {
         self.registers.a = result;
     }
 
+    // Subtract value from A.
+    // value = A,B,C,D,E,H,L,(HL),#
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - Set.
+    // H - Set if no borrow from bit 4.
+    // C - Set if no borrow
+    pub fn inst_alu_sub(&mut self, value: u8) {
+        let curr = self.registers.a;
+        let result = curr.wrapping_sub(value);
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, true);
+        self.registers
+            .set_flag(CpuFlag::H, (curr & 0x0F) < (value & 0x0F));
+        self.registers
+            .set_flag(CpuFlag::C, (curr as u16) < (value as u16));
+        self.registers.a = result;
+    }
+
     // Add value + Carry flag to A.
     // value = A,B,C,D,E,H,L,(HL),#
     //
@@ -257,5 +277,97 @@ impl CPU {
         self.registers.set_flag(CpuFlag::N, false);
         self.registers.set_flag(CpuFlag::H, false);
         self.registers.set_flag(CpuFlag::C, value);
+    }
+
+    // Subtract value + Carry flag from A.
+    // value = A,B,C,D,E,H,L,(HL),#
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - Set.
+    // H - Set if no borrow from bit 4.
+    // C - Set if no borrow.
+    pub fn inst_alu_sbc(&mut self, value: u8) {
+        let curr = self.registers.a;
+        let carry = u8::from(self.registers.has_flag(CpuFlag::C));
+        let result = curr.wrapping_sub(value).wrapping_sub(carry);
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, true);
+        self.registers
+            .set_flag(CpuFlag::H, (curr & 0x0F) < (value & 0x0F) + carry);
+        self.registers.set_flag(
+            CpuFlag::C,
+            (curr as u16) < ((value as u16) + (carry as u16)),
+        );
+        self.registers.a = result;
+    }
+
+
+    // Logically AND value with A, result in A.
+    // value = A,B,C,D,E,H,L,(HL),#
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - Set.
+    // C - unset (set to false).
+    pub fn inst_alu_and(&mut self, value: u8) {
+        let result = self.registers.a & value;
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, true);
+        self.registers.set_flag(CpuFlag::C, false);
+        self.registers.a = result;
+    }
+
+
+    // Logical exclusive OR value with register A, result in A.
+    // value = A,B,C,D,E,H,L,(HL),#
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - unset (set to false).
+    pub fn inst_alu_xor(&mut self, value: u8) {
+        let result = self.registers.a ^ value;
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, false);
+        self.registers.a = result;
+    }
+
+
+    // Logical OR value with register A, result in A.
+    // value = A,B,C,D,E,H,L,(HL),#
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - unset (set to false).
+    pub fn inst_alu_or(&mut self, value: u8) {
+        let result = self.registers.a | value;
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, false);
+        self.registers.a = result;
+    }
+
+    // Compare A with value.
+    // This is basically an A - value subtraction instruction but the results are thrown away.
+    // value = A,B,C,D,E,H,L,(HL),#
+    //
+    // Flags affected:
+    // Z - Set if result is zero. (Set if A = value.)
+    // N - Set.
+    // H - Set if no borrow from bit 4.
+    // C - Set for no borrow. (Set if A < n.)
+    pub fn inst_alu_cp(&mut self, value: u8) {
+        let curr = self.registers.a;
+        self.inst_alu_sub(value);
+        self.registers.a = curr;
     }
 }

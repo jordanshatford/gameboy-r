@@ -3,7 +3,7 @@ use crate::cpu::CPU;
 
 // CPU CB Code Mapping (Prefixed by 0xCB)
 impl CPU {
-    pub fn execute_cb(&mut self, cb_code: u8) {
+    pub fn execute_cb(&mut self, cb_code: u8) -> u32 {
         match cb_code {
             0x00 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
             0x01 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
@@ -262,5 +262,6 @@ impl CPU {
             0xFE => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
             0xFF => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
         }
+        panic!("cpu: num cycles returned not implemented (cb)")
     }
 }
