@@ -80,6 +80,60 @@ impl CPU {
         self.registers.sp += 2;
         result
     }
+
+    // The IME (interrupt master enable) flag is reset by DI and prohibits all interrupts.
+    // It is set by EI and acknowledges the interrupt setting by the IE register.
+    // 1. When an interrupt is generated, the IF flag will be set.
+    // 2. If the IME flag is set & the corresponding IE flag is set, the following 3 steps are performed.
+    // 3. Reset the IME flag and prevent all interrupts.
+    // 4. The PC (program counter) is pushed onto the stack.
+    // 5. Jump to the starting address of the interrupt.
+    pub fn handle_interrupts(&mut self) -> u32 {
+        if !self.halted && !self.ei {
+            return 0;
+        }
+        let interrupts_asserted = self.get_byte_in_memory(0xFF0F);
+        let interrupts_enabled = self.get_byte_in_memory(0xFFFF);
+        let interrupts = interrupts_asserted & interrupts_enabled;
+        if interrupts == 0x00 {
+            return 0;
+        }
+        self.halted = false;
+        if !self.ei {
+            return 0;
+        }
+        self.ei = false;
+        // Consume an interrupt and write the rest back to memory
+        let n = interrupts.trailing_zeros();
+        let interrupts_asserted = interrupts_asserted & !(1 << n);
+        self.set_byte_in_memory(0xFF0F, interrupts_asserted);
+        self.add_to_stack(self.registers.pc);
+        // Set the PC to correspond interrupt process program:
+        // V-Blank: 0x40
+        // LCD: 0x48
+        // TIMER: 0x50
+        // JOYPAD: 0x60
+        // Serial: 0x58
+        self.registers.pc = 0x0040 | ((n as u16) << 3);
+        4
+    }
+
+    pub fn run(&mut self) -> u32 {
+        let cycles = {
+            match self.handle_interrupts() {
+                0 => {}
+                n => return n,
+            }
+            if self.halted {
+                // Emulate a noop instruction
+                1
+            } else {
+                let op_code = self.get_byte_at_pc();
+                self.execute(op_code)
+            }
+        };
+        cycles * 4
+    }
 }
 
 mod cb_codes;

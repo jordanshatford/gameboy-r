@@ -51,14 +51,14 @@ pub struct MMU {
     hram: [u8; HRAM_SIZE],
     wram: [u8; WRAM_SIZE],
     wram_bank: usize,
-    interruptes_asserted: u8, // IF
+    interrupts_asserted: u8, // IF
     // FFFF - IE - Interrupt Enable (R/W)
     // Bit 0: VBlank   Interrupt Enable  (INT $40)  (1=Enable)
     // Bit 1: LCD STAT Interrupt Enable  (INT $48)  (1=Enable)
     // Bit 2: Timer    Interrupt Enable  (INT $50)  (1=Enable)
     // Bit 3: Serial   Interrupt Enable  (INT $58)  (1=Enable)
     // Bit 4: Joypad   Interrupt Enable  (INT $60)  (1=Enable)
-    interruptes_enabled: u8, // IE
+    interrupts_enabled: u8, // IE
 }
 
 impl MMU {
@@ -76,8 +76,8 @@ impl MMU {
             hram: [0x00; HRAM_SIZE],
             wram: [0x00; WRAM_SIZE],
             wram_bank: 0x01,
-            interruptes_asserted: InterruptFlag::None as u8,
-            interruptes_enabled: 0x00,
+            interrupts_asserted: InterruptFlag::None as u8,
+            interrupts_enabled: 0x00,
         };
         // Set initial values
         mmu.set_byte(0xFF05, 0x00);
@@ -132,21 +132,21 @@ impl MMU {
         let cpu_cycles = cycles + vram_cycles * cpu_divider;
 
         self.timer.run_cycles(cpu_cycles);
-        self.interruptes_asserted |= self.timer.interrupt;
+        self.interrupts_asserted |= self.timer.interrupt;
         self.timer.interrupt = InterruptFlag::None as u8;
 
-        self.interruptes_asserted |= self.joypad.interrupt;
+        self.interrupts_asserted |= self.joypad.interrupt;
         self.joypad.interrupt = InterruptFlag::None as u8;
 
         self.ppu.run_cycles(ppu_cycles);
-        self.interruptes_asserted |= self.ppu.interrupt;
+        self.interrupts_asserted |= self.ppu.interrupt;
         self.ppu.interrupt = InterruptFlag::None as u8;
 
         self.apu
             .as_mut()
             .map_or((), |apu| apu.run_cycles(ppu_cycles));
 
-        self.interruptes_asserted |= self.serial.interrupt;
+        self.interrupts_asserted |= self.serial.interrupt;
         self.serial.interrupt = InterruptFlag::None as u8;
 
         ppu_cycles
@@ -193,7 +193,7 @@ impl Memory for MMU {
                     // Timer and Divider Registers
                     0xFF04..=0xFF07 => self.timer.get_byte(addr),
                     // IF - Interrupt Flag (R/W)
-                    0xFF0F => self.interruptes_asserted,
+                    0xFF0F => self.interrupts_asserted,
                     // Sound Controller (APU)
                     0xFF10..=0xFF3F => match &self.apu {
                         Some(apu) => apu.get_byte(addr),
@@ -229,7 +229,7 @@ impl Memory for MMU {
             // High RAM (HRAM)
             0xFF80..=0xFFFE => self.hram[addr as usize - 0xFF80],
             // IE Register
-            0xFFFF => self.interruptes_enabled,
+            0xFFFF => self.interrupts_enabled,
         }
     }
 
@@ -272,7 +272,7 @@ impl Memory for MMU {
                     // Timer and Divider Registers
                     0xFF04..=0xFF07 => self.timer.set_byte(addr, value),
                     // IF - Interrupt Flag (R/W)
-                    0xFF0F => self.interruptes_asserted = value,
+                    0xFF0F => self.interrupts_asserted = value,
                     // Sound Controller (APU)
                     0xFF10..=0xFF3F => self
                         .apu
@@ -309,7 +309,7 @@ impl Memory for MMU {
             // High RAM (HRAM)
             0xFF80..=0xFFFE => self.hram[addr as usize - 0xFF80] = value,
             // IE Register
-            0xFFFF => self.interruptes_enabled = value,
+            0xFFFF => self.interrupts_enabled = value,
         }
     }
 }
