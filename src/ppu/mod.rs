@@ -180,7 +180,68 @@ impl PPU {
         }
     }
 
-    pub fn run_cycles(&mut self, cycles: u32) {}
+    pub fn run_cycles(&mut self, cycles: u32) {
+        if !self.lcd_control.has_bit7() {
+            return;
+        }
+        self.hblank = false;
+        if cycles == 0 {
+            return;
+        }
+        let c = (cycles - 1) / 80 + 1;
+        for i in 0..c {
+            if i == (c - 1) {
+                self.dots += cycles % 80
+            } else {
+                self.dots += 80
+            }
+            let d = self.dots;
+            self.dots %= 456;
+            if d != self.dots {
+                self.lcdc_y = (self.lcdc_y + 1) % 154;
+                if self.lcd_status.lyc_interrupt_enabled && self.lcdc_y == self.ly_compare {
+                    self.interrupt |= InterruptFlag::LCDStat as u8;
+                }
+            }
+            if self.lcdc_y >= 144 {
+                if self.lcd_status.mode == 1 {
+                    continue;
+                }
+                self.lcd_status.mode = 1;
+                self.vblank = true;
+                self.interrupt |= InterruptFlag::VBlank as u8;
+                if self.lcd_status.m1_vblank_interrupt_enabled {
+                    self.interrupt |= InterruptFlag::LCDStat as u8;
+                }
+            } else if self.dots <= 80 {
+                if self.lcd_status.mode == 2 {
+                    continue;
+                }
+                self.lcd_status.mode = 2;
+                if self.lcd_status.m2_oam_interrupt_enabled {
+                    self.interrupt |= InterruptFlag::LCDStat as u8;
+                }
+            } else if self.dots <= (80 + 172) {
+                self.lcd_status.mode = 3;
+            } else {
+                if self.lcd_status.mode == 0 {
+                    continue;
+                }
+                self.lcd_status.mode = 0;
+                self.hblank = true;
+                if self.lcd_status.m0_hblank_interrupt_enabled {
+                    self.interrupt |= InterruptFlag::LCDStat as u8;
+                }
+                // Render scanline
+                if self.mode == CartridgeMode::GBC || self.lcd_control.has_bit0() {
+                    self.draw_background();
+                }
+                if self.lcd_control.has_bit1() {
+                    self.draw_sprites();
+                }
+            }
+        }
+    }
 
     // num can be 0 or 1 for each specific vram
     fn get_vram(&self, num: u8, addr: u16) -> u8 {
