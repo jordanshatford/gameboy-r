@@ -8,13 +8,15 @@ impl APU {
         APU {}
     }
 
-    pub fn run_cycles(&mut self, cycles: u32) {}
+    pub fn run_cycles(&mut self, _cycles: u32) {}
 }
 
 impl Memory for APU {
-    fn get_byte(&self, addr: u16) -> u8 {
-        0x00
+    fn get_byte(&self, _addr: u16) -> u8 {
+        panic!("apu: not implemented")
     }
 
-    fn set_byte(&mut self, addr: u16, value: u8) {}
+    fn set_byte(&mut self, _addr: u16, _value: u8) {
+        panic!("apu: not implemented")
+    }
 }

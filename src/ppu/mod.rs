@@ -289,11 +289,11 @@ impl PPU {
         let lr = ((r * 13 + g * 2 + b) >> 1) as u8;
         let lg = ((g * 3 + b) << 1) as u8;
         let lb = ((r * 3 + g * 2 + b * 11) >> 1) as u8;
-        self.data[self.ly_compare as usize][index] = [lr, lg, lb];
+        self.data[self.lcdc_y as usize][index] = [lr, lg, lb];
     }
 
     fn set_greyscale(&mut self, index: usize, g: u8) {
-        self.data[self.ly_compare as usize][index] = [g, g, g];
+        self.data[self.lcdc_y as usize][index] = [g, g, g];
     }
 
     fn draw_background(&mut self) {
@@ -616,7 +616,7 @@ impl Memory for PPU {
             // VRAM (memory at 8000h-9FFFh) is accessable during Mode 0-2
             0x8000..=0x9FFF => self.vram[self.vram_bank * 0x2000 + addr as usize - 0x8000] = value,
             // OAM (memory at FE00h-FE9Fh) is accessable during Mode 0-1
-            0xFE00..=0xFE9F => self.oam[addr as usize - 0xfe00] = value,
+            0xFE00..=0xFE9F => self.oam[addr as usize - 0xFE00] = value,
             // FF40 - LCDC - LCD Control (R/W)
             0xFF40 => {
                 self.lcd_control.data = value;
@@ -625,7 +625,7 @@ impl Memory for PPU {
                     self.lcdc_y = 0;
                     self.lcd_status.mode = 0;
                     // Clean screen.
-                    self.data = [[[0xffu8; 3]; SCREEN_WIDTH]; SCREEN_HEIGHT];
+                    self.data = [[[0xFFu8; 3]; SCREEN_WIDTH]; SCREEN_HEIGHT];
                     self.vblank = true;
                 }
             }
