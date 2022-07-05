@@ -8,12 +8,12 @@
 //   Bit3   Tile VRAM-Bank  **CGB Mode Only**     (0=Bank 0, 1=Bank 1)
 //   Bit2-0 Palette number  **CGB Mode Only**     (OBP0-7)
 pub struct Attribute {
-    priority: bool,
-    y_flip: bool,
-    x_flip: bool,
-    palette_number: usize,
-    vram_bank: bool,
-    cgb_palette_number: usize,
+    pub priority: bool,
+    pub y_flip: bool,
+    pub x_flip: bool,
+    pub palette_number: usize,
+    pub vram_bank: bool,
+    pub cgb_palette_number: usize,
 }
 
 impl From<u8> for Attribute {

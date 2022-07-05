@@ -181,6 +181,148 @@ impl PPU {
     }
 
     pub fn run_cycles(&mut self, cycles: u32) {}
+
+    // num can be 0 or 1 for each specific vram
+    fn get_vram(&self, num: u8, addr: u16) -> u8 {
+        match num {
+            0 => self.vram[addr as usize - 0x8000],
+            1 => self.vram[addr as usize - 0x6000],
+            _ => panic!("ppu: invalid vram number"),
+        }
+    }
+
+    // This register assigns gray shades to the color numbers of the BG and Window tiles.
+    //  Bit 7-6 - Shade for Color Number 3
+    //  Bit 5-4 - Shade for Color Number 2
+    //  Bit 3-2 - Shade for Color Number 1
+    //  Bit 1-0 - Shade for Color Number 0
+    // The four possible gray shades are:
+    //  0  White
+    //  1  Light gray
+    //  2  Dark gray
+    //  3  Black
+    fn get_gray_shade(&self, value: u8, i: usize) -> u8 {
+        match value >> (2 * i) & 0x03 {
+            0x00 => 0xFF,
+            0x01 => 0xC0,
+            0x02 => 0x60,
+            _ => 0x00,
+        }
+    }
+
+    // When developing graphics on PCs, note that the RGB values will have different appearance on CGB displays as on
+    // VGA/HDMI monitors calibrated to sRGB color. Because the GBC is not lit, the highest intensity will produce
+    // Light Gray color rather than White. The intensities are not linear; the values 10h-1Fh will all appear very
+    // bright, while medium and darker colors are ranged at 00h-0Fh.
+    // The CGB display's pigments aren't perfectly saturated. This means the colors mix quite oddly; increasing
+    // intensity of only one R,G,B color will also influence the other two R,G,B colors. For example, a color setting
+    // of 03EFh (Blue=0, Green=1Fh, Red=0Fh) will appear as Neon Green on VGA displays, but on the CGB it'll produce
+    // a decently washed out Yellow
+    fn set_rgb(&mut self, index: usize, r: u8, g: u8, b: u8) {
+        assert!(r <= 0x1F);
+        assert!(g <= 0x1F);
+        assert!(b <= 0x1F);
+        let r = u32::from(r);
+        let g = u32::from(g);
+        let b = u32::from(b);
+        let lr = ((r * 13 + g * 2 + b) >> 1) as u8;
+        let lg = ((g * 3 + b) << 1) as u8;
+        let lb = ((r * 3 + g * 2 + b * 11) >> 1) as u8;
+        self.data[self.ly_compare as usize][index] = [lr, lg, lb];
+    }
+
+    fn set_greyscale(&mut self, index: usize, g: u8) {
+        self.data[self.ly_compare as usize][index] = [g, g, g];
+    }
+
+    fn draw_background(&mut self) {
+        let show_window = self.lcd_control.has_bit5() && self.window_y <= self.ly_compare;
+        let tile_base = if self.lcd_control.has_bit4() {
+            0x8000
+        } else {
+            0x8800
+        };
+        let window_x = self.window_x.wrapping_sub(7);
+        let picture_y = if show_window {
+            self.ly_compare.wrapping_sub(self.window_y)
+        } else {
+            self.scroll_y.wrapping_add(self.ly_compare)
+        };
+        let tile_y = (u16::from(picture_y) >> 3) & 31;
+
+        for x in 0..SCREEN_WIDTH {
+            let picture_x = if show_window && x as u8 >= window_x {
+                x as u8 - window_x
+            } else {
+                self.scroll_x.wrapping_add(x as u8)
+            };
+            let tile_x = (u16::from(picture_x) >> 3) & 31;
+            let background_base_addr = if show_window && x as u8 >= window_x {
+                if self.lcd_control.has_bit6() {
+                    0x9C00
+                } else {
+                    0x9800
+                }
+            } else if self.lcd_control.has_bit3() {
+                0x9C00
+            } else {
+                0x9800
+            };
+            let tile_addr = background_base_addr + tile_y * 32 + tile_x;
+            let tile_number = self.get_vram(0, tile_addr);
+            let tile_offset = if self.lcd_control.has_bit4() {
+                i16::from(tile_number)
+            } else {
+                i16::from(tile_number as i8) + 128
+            } as u16
+                * 16;
+            let tile_location = tile_base + tile_offset;
+            let tile_attribute = Attribute::from(self.get_vram(1, tile_addr));
+            let tile_y = if tile_attribute.y_flip {
+                7 - picture_y % 8
+            } else {
+                picture_y % 8
+            };
+            let tile_y_data: [u8; 2] =
+                if self.mode == CartridgeMode::GBC && tile_attribute.vram_bank {
+                    let a = self.get_vram(1, tile_location + u16::from(tile_y * 2));
+                    let b = self.get_vram(1, tile_location + u16::from(tile_y * 2) + 1);
+                    [a, b]
+                } else {
+                    let a = self.get_vram(0, tile_location + u16::from(tile_y * 2));
+                    let b = self.get_vram(0, tile_location + u16::from(tile_y * 2) + 1);
+                    [a, b]
+                };
+            let tile_x = if tile_attribute.x_flip {
+                7 - picture_x % 8
+            } else {
+                picture_x % 8
+            };
+            let color_low = if tile_y_data[0] & (0x80 >> tile_x) != 0 {
+                1
+            } else {
+                0
+            };
+            let color_high = if tile_y_data[1] & (0x80 >> tile_x) != 0 {
+                2
+            } else {
+                0
+            };
+            let color = color_high | color_low;
+            self.priorities[x] = (tile_attribute.priority, color);
+            if self.mode == CartridgeMode::GBC {
+                let r = self.bgp_data[tile_attribute.cgb_palette_number][color][0];
+                let g = self.bgp_data[tile_attribute.cgb_palette_number][color][1];
+                let b = self.bgp_data[tile_attribute.cgb_palette_number][color][2];
+                self.set_rgb(x as usize, r, g, b);
+            } else {
+                let color = self.get_gray_shade(self.bg_palette, color) as u8;
+                self.set_greyscale(x, color);
+            }
+        }
+    }
+
+    fn draw_sprites(&mut self) {}
 }
 
 impl Memory for PPU {

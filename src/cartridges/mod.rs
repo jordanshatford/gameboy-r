@@ -9,7 +9,7 @@ use crate::cartridges::mbc1::MBC1;
 use crate::cartridges::rom::RomOnly;
 use crate::memory::Memory;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CartridgeMode {
     GB,  // Original Game Boy
     GBC, // Game Boy Color
