@@ -387,4 +387,105 @@ impl CPU {
             .set_flag(CpuFlag::C, (curr & 0x00FF) + (val & 0x00FF) > 0x00FF);
         self.registers.sp = curr.wrapping_add(val);
     }
+
+    // Shift value left into Carry. LSB of value set to 0.
+    // value = A,B,C,D,E,H,L,(HL)
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - Contains old bit 7 data
+    pub fn inst_alu_sla(&mut self, value: u8) -> u8 {
+        let has_carry = (value & 0x80) >> 7 == 0x01;
+        let result = value << 1;
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, has_carry);
+        result
+    }
+
+    // Shift value right into Carry. MSB doesn't change.
+    // value = A,B,C,D,E,H,L,(HL)
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - Contains old bit 0 data.
+    pub fn inst_alu_sra(&mut self, value: u8) -> u8 {
+        let has_carry = value & 0x01 == 0x01;
+        let result = (value >> 1) | (value & 0x80);
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, has_carry);
+        result
+    }
+
+    // Shift value right into Carry. MSB set to 0.
+    // value = A,B,C,D,E,H,L,(HL)
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - Contains old bit 0 data.
+    pub fn inst_alu_srl(&mut self, value: u8) -> u8 {
+        let has_carry = value & 0x01 == 0x01;
+        let result = value >> 1;
+        self.registers.set_flag(CpuFlag::Z, result == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, has_carry);
+        result
+    }
+
+    // Swap upper & lower nibles of value.
+    // value = A,B,C,D,E,H,L,(HL)
+    //
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - unset (set to false).
+    // H - unset (set to false).
+    // C - unset (set to false).
+    pub fn inst_alu_swap(&mut self, value: u8) -> u8 {
+        self.registers.set_flag(CpuFlag::Z, value == 0x00);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, false);
+        self.registers.set_flag(CpuFlag::C, false);
+        (value >> 4) | (value << 4)
+    }
+
+    // Test bit (bit) in register value.
+    // bit = 0 - 7, value = A,B,C,D,E,H,L,(HL)
+    //
+    // Flags affected:
+    // Z - Set if bit (bit) of register (value) is 0.
+    // N - unset (set to false).
+    // H - Set.
+    // C - Not affected
+    pub fn inst_alu_bit(&mut self, value: u8, bit: u8) {
+        let result = value & (1 << bit) == 0x00;
+        self.registers.set_flag(CpuFlag::Z, result);
+        self.registers.set_flag(CpuFlag::N, false);
+        self.registers.set_flag(CpuFlag::H, true);
+    }
+
+    // Reset bit (bit) in register value.
+    // bit = 0 - 7, value = A,B,C,D,E,H,L,(HL)
+    //
+    // Flags affected:  None
+    pub fn inst_alu_res(&mut self, value: u8, bit: u8) -> u8 {
+        value & !(1 << bit)
+    }
+
+    // Set bit (bit) in register value.
+    // bit = 0 - 7, value = A,B,C,D,E,H,L,(HL)
+    //
+    // Flags affected:  None.
+    pub fn inst_alu_set(&mut self, value: u8, bit: u8) -> u8 {
+        value | (1 << bit)
+    }
 }
