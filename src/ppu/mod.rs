@@ -15,11 +15,11 @@ pub const SCREEN_HEIGHT: usize = 144;
 #[derive(Debug, Copy, Clone)]
 pub struct PPU {
     // Digital image with mode RGB. Size = 144 * 160 * 3 (RGB).
-    data: [[[u8; 3]; SCREEN_WIDTH]; SCREEN_HEIGHT],
+    pub data: [[[u8; 3]; SCREEN_WIDTH]; SCREEN_HEIGHT],
     mode: CartridgeMode,
     pub interrupt: u8,
-    vblank: bool,
-    hblank: bool,
+    pub vblank: bool,
+    pub hblank: bool,
     lcd_control: LCDControl,
     lcd_status: LCDStatus,
     // FF42 - SCY - Scroll Y (R/W)

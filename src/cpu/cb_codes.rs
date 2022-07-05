@@ -1,4 +1,3 @@
-use crate::cpu::registers::CpuFlag;
 use crate::cpu::CPU;
 
 // Nintendo documents describe the CPU & instructions speed in machine cycles while this document describes them in

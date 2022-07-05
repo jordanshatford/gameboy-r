@@ -1,9 +1,7 @@
 // https://mgba-emu.github.io/gbdoc/#memory-map
 
-use std::path::Path;
-
 use crate::apu::APU;
-use crate::cartridges::{self, Cartridge, CartridgeMode};
+use crate::cartridges::Cartridge;
 use crate::joypad::Joypad;
 use crate::memory::Memory;
 use crate::ppu::hdma::{HDMAMode, HDMA};
@@ -41,10 +39,10 @@ const WRAM_SIZE: usize = 0x8000;
 const WRAM_BANK_SIZE: usize = 0x1000;
 
 pub struct MMU {
-    cartridge: Box<dyn Cartridge>,
+    pub cartridge: Box<dyn Cartridge>,
     apu: Option<APU>,
-    ppu: PPU,
-    joypad: Joypad,
+    pub ppu: PPU,
+    pub joypad: Joypad,
     serial: Serial,
     timer: Timer,
     speed: Speed,
@@ -130,7 +128,7 @@ impl MMU {
 
     pub fn run_cycles(&mut self, cycles: u32) -> u32 {
         let cpu_divider = self.speed as u32;
-        let vram_cycles = 0; // TODO calculate  dma (HDMA, GDMA)
+        let vram_cycles = self.run_dma();
         let ppu_cycles = cycles / cpu_divider + vram_cycles;
         let cpu_cycles = cycles + vram_cycles * cpu_divider;
 
@@ -153,6 +151,47 @@ impl MMU {
         self.serial.interrupt = InterruptFlag::None as u8;
 
         ppu_cycles
+    }
+
+    pub fn run_dma(&mut self) -> u32 {
+        if !self.hdma.active {
+            return 0;
+        }
+        match self.hdma.mode {
+            HDMAMode::GDMA => {
+                let len = u32::from(self.hdma.remain) + 1;
+                for _ in 0..len {
+                    self.run_dma_hram();
+                }
+                self.hdma.active = false;
+                len * 8
+            }
+            HDMAMode::HDMA => {
+                if !self.ppu.hblank {
+                    return 0;
+                }
+                self.run_dma_hram();
+                if self.hdma.remain == 0x7F {
+                    self.hdma.active = false;
+                }
+                8
+            }
+        }
+    }
+
+    pub fn run_dma_hram(&mut self) {
+        let source = self.hdma.source;
+        for i in 0..0x10 {
+            let b: u8 = self.get_byte(source + i);
+            self.ppu.set_byte(self.hdma.destination + i, b);
+        }
+        self.hdma.source += 0x10;
+        self.hdma.destination += 0x10;
+        if self.hdma.remain == 0 {
+            self.hdma.remain = 0x7F;
+        } else {
+            self.hdma.remain -= 1;
+        }
     }
 }
 

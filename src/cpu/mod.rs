@@ -73,7 +73,7 @@ impl CPU {
     }
 
     pub fn add_to_stack(&mut self, value: u16) {
-        self.registers.sp += 2;
+        self.registers.sp -= 2;
         self.set_word_in_memory(self.registers.sp, value);
     }
 
