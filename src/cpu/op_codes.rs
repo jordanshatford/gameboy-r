@@ -1,3 +1,6 @@
+use crate::cpu::registers::CpuFlag;
+use crate::cpu::CPU;
+
 // Nintendo documents describe the CPU & instructions speed in machine cycles while
 // this document describes them in clock cycles. Here is the translation:
 //   1 machine cycle = 4 clock cycles
@@ -6,10 +9,6 @@
 // Clock Cycles      4.19MHz         4 cycles
 //
 //  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
-
-use crate::cpu::registers::CpuFlag;
-use crate::cpu::CPU;
-
 const OP_CYCLES: [u32; 256] = [
     1, 3, 2, 2, 1, 1, 2, 1, 5, 2, 2, 2, 1, 1, 2, 1, // 0
     0, 3, 2, 2, 1, 1, 2, 1, 3, 2, 2, 2, 1, 1, 2, 1, // 1
@@ -841,7 +840,7 @@ impl CPU {
                 self.add_to_stack(self.registers.pc);
                 self.registers.pc = 0x38;
             }
-        }
+        };
         let ecycle = match op_code {
             0x20 | 0x30 => {
                 if self.registers.has_flag(CpuFlag::Z) {
