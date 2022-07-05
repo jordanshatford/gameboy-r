@@ -51,9 +51,9 @@ impl Memory for HDMA {
             // HDMA2 - CGB Mode Only - New DMA Source, Low
             0xFF52 => self.source as u8,
             // HDMA3 - CGB Mode Only - New DMA Destination, High
-            0xFF53 => (self.source >> 8) as u8,
+            0xFF53 => (self.destination >> 8) as u8,
             // HDMA4 - CGB Mode Only - New DMA Destination, Low
-            0xFF54 => self.source as u8,
+            0xFF54 => self.destination as u8,
             // HDMA5 - CGB Mode Only - New DMA Length/Mode/Start
             // Bit7=0 - General Purpose DMA
             // When using this transfer method, all data is transferred at once. The execution of the program
