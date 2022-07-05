@@ -35,67 +35,87 @@ impl CPU {
             // RLC B
             0x00 => self.registers.b = self.inst_alu_rlc(self.registers.b),
             // RLC C
-            0x01 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x01 => self.registers.c = self.inst_alu_rlc(self.registers.c),
             // RLC D
-            0x02 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x02 => self.registers.d = self.inst_alu_rlc(self.registers.d),
             // RLC E
-            0x03 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x03 => self.registers.e = self.inst_alu_rlc(self.registers.e),
             // RLC H
-            0x04 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x04 => self.registers.h = self.inst_alu_rlc(self.registers.h),
             // RLC L
-            0x05 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x05 => self.registers.l = self.inst_alu_rlc(self.registers.l),
             // RLC (HL)
-            0x06 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x06 => {
+                let addr = self.registers.hl();
+                let value = self.get_byte_in_memory(addr);
+                let result = self.inst_alu_rlc(value);
+                self.set_byte_in_memory(addr, result);
+            }
             // RLC A
-            0x07 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x07 => self.registers.a = self.inst_alu_rlc(self.registers.a),
             // RRC B
-            0x08 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x08 => self.registers.b = self.inst_alu_rrc(self.registers.b),
             // RRC C
-            0x09 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x09 => self.registers.c = self.inst_alu_rrc(self.registers.c),
             // RRC D
-            0x0A => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x0A => self.registers.d = self.inst_alu_rrc(self.registers.d),
             // RRC E
-            0x0B => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x0B => self.registers.e = self.inst_alu_rrc(self.registers.e),
             // RRC H
-            0x0C => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x0C => self.registers.h = self.inst_alu_rrc(self.registers.h),
             // RRC L
-            0x0D => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x0D => self.registers.l = self.inst_alu_rrc(self.registers.l),
             // RRC (HL)
-            0x0E => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x0E => {
+                let addr = self.registers.hl();
+                let value = self.get_byte_in_memory(addr);
+                let result = self.inst_alu_rrc(value);
+                self.set_byte_in_memory(addr, result);
+            }
             // RRC A
-            0x0F => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x0F => self.registers.a = self.inst_alu_rrc(self.registers.a),
             // RL B
-            0x10 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x10 => self.registers.b = self.inst_alu_rl(self.registers.b),
             // RL C
-            0x11 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x11 => self.registers.c = self.inst_alu_rl(self.registers.c),
             // RL D
-            0x12 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x12 => self.registers.d = self.inst_alu_rl(self.registers.d),
             // RL E
-            0x13 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x13 => self.registers.e = self.inst_alu_rl(self.registers.e),
             // RL H
-            0x14 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x14 => self.registers.h = self.inst_alu_rl(self.registers.h),
             // RL L
-            0x15 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x15 => self.registers.l = self.inst_alu_rl(self.registers.l),
             // RL (HL)
-            0x16 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x16 => {
+                let addr = self.registers.hl();
+                let value = self.get_byte_in_memory(addr);
+                let result = self.inst_alu_rl(value);
+                self.set_byte_in_memory(addr, result);
+            }
             // RL A
-            0x17 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x17 => self.registers.a = self.inst_alu_rl(self.registers.a),
             // RR B
-            0x18 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x18 => self.registers.b = self.inst_alu_rr(self.registers.b),
             // RR C
-            0x19 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x19 => self.registers.c = self.inst_alu_rr(self.registers.c),
             // RR D
-            0x1A => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x1A => self.registers.d = self.inst_alu_rr(self.registers.d),
             // RR E
-            0x1B => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x1B => self.registers.e = self.inst_alu_rr(self.registers.e),
             // RR H
-            0x1C => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x1C => self.registers.h = self.inst_alu_rr(self.registers.h),
             // RR L
-            0x1D => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x1D => self.registers.l = self.inst_alu_rr(self.registers.l),
             // RR (HL)
-            0x1E => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x1E => {
+                let addr = self.registers.hl();
+                let value = self.get_byte_in_memory(addr);
+                let result = self.inst_alu_rr(value);
+                self.set_byte_in_memory(addr, result);
+            }
             // RR A
-            0x1F => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
+            0x1F => self.registers.a = self.inst_alu_rr(self.registers.a),
             // SLA B
             0x20 => panic!("cpu: CB code not implemented {:#04X?}", cb_code),
             // SLA C
