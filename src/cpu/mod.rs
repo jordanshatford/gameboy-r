@@ -16,6 +16,8 @@ mod registers;
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::thread;
+use std::time;
 
 use crate::cartridges::CartridgeMode;
 use crate::cpu::registers::Registers;
@@ -139,3 +141,57 @@ impl CPU {
 mod cb_codes;
 mod instructions;
 mod op_codes;
+
+pub const CLOCK_FREQUENCY: u32 = 4_194_304;
+pub const STEP_TIME: u32 = 16;
+pub const STEP_CYCLES: u32 = (STEP_TIME as f64 / (1000_f64 / CLOCK_FREQUENCY as f64)) as u32;
+
+pub struct RealTimeCPU {
+    pub cpu: CPU,
+    step_cycles: u32,
+    step_zero: time::Instant,
+    step_flip: bool,
+}
+
+impl RealTimeCPU {
+    pub fn new(mode: CartridgeMode, memory: Rc<RefCell<dyn Memory>>) -> RealTimeCPU {
+        RealTimeCPU {
+            cpu: CPU::new(mode, memory),
+            step_cycles: 0,
+            step_zero: time::Instant::now(),
+            step_flip: false,
+        }
+    }
+
+    // Simulate real hardware execution speed by limiting function call of cpu.run()
+    pub fn run(&mut self) -> u32 {
+        if self.step_cycles > STEP_CYCLES {
+            self.step_flip = true;
+            self.step_cycles -= STEP_CYCLES;
+            let now = time::Instant::now();
+            let duration = now.duration_since(self.step_zero);
+            let s = u64::from(STEP_TIME.saturating_sub(duration.as_millis() as u32));
+            thread::sleep(time::Duration::from_millis(s));
+            self.step_zero = self
+                .step_zero
+                .checked_add(time::Duration::from_millis(u64::from(STEP_TIME)))
+                .unwrap();
+
+            // If now is after the just updated target frame time, reset to avoid drifting
+            if now.checked_duration_since(self.step_zero).is_some() {
+                self.step_zero = now;
+            }
+        }
+        let cycles = self.cpu.run();
+        self.step_cycles += cycles;
+        cycles
+    }
+
+    pub fn flip(&mut self) -> bool {
+        let step_flip = self.step_flip;
+        if step_flip {
+            self.step_flip = false;
+        }
+        step_flip
+    }
+}

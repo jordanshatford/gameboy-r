@@ -2,9 +2,10 @@
 A Game Boy emulator written in Rust.
 
 ## Implemented
-- [ ] CPU
+- [x] CPU
   - [x] Registers & Flags
-  - [ ] Instruction Set
+  - [x] Instruction Set
+  - [x] Timing
 - [ ] MMU
   - [x] Work RAM (WRAM)
   - [x] High Ram (HRAM)
