@@ -1,3 +1,5 @@
+pub mod hdma;
+
 use crate::cartridges::CartridgeMode;
 use crate::memory::Memory;
 use crate::mmu::InterruptFlag;

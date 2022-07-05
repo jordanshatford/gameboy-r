@@ -6,6 +6,7 @@ use crate::apu::APU;
 use crate::cartridges::{self, Cartridge, CartridgeMode};
 use crate::joypad::Joypad;
 use crate::memory::Memory;
+use crate::ppu::hdma::{HDMAMode, HDMA};
 use crate::ppu::PPU;
 use crate::serial::Serial;
 use crate::timer::Timer;
@@ -48,6 +49,7 @@ pub struct MMU {
     timer: Timer,
     speed: Speed,
     prepare_speed_switch: bool,
+    hdma: HDMA,
     hram: [u8; HRAM_SIZE],
     wram: [u8; WRAM_SIZE],
     wram_bank: usize,
@@ -73,6 +75,7 @@ impl MMU {
             timer: Timer::new(),
             speed: Speed::Normal,
             prepare_speed_switch: false,
+            hdma: HDMA::new(),
             hram: [0x00; HRAM_SIZE],
             wram: [0x00; WRAM_SIZE],
             wram_bank: 0x01,
@@ -218,7 +221,7 @@ impl Memory for MMU {
                     // LCD VRAM Bank (CGB only)
                     0xFF4F => self.ppu.get_byte(addr),
                     // LCD VRAM DMA Transfers (CGB only)
-                    0xFF51..=0xFF55 => panic!("hdma: not implemented"),
+                    0xFF51..=0xFF55 => self.hdma.get_byte(addr),
                     // LCD Color Palettes (CGB only)
                     0xFF68..=0xFF6b => self.ppu.get_byte(addr),
                     // SVBK - CGB Mode Only - WRAM Bank
@@ -290,7 +293,7 @@ impl Memory for MMU {
                     // LCD VRAM Bank (CGB only)
                     0xFF4F => self.ppu.set_byte(addr, value),
                     // LCD VRAM DMA Transfers (CGB only)
-                    0xFF51..=0xFF55 => panic!("hdma: not implemented"),
+                    0xFF51..=0xFF55 => self.hdma.set_byte(addr, value),
                     // LCD Color Palettes (CGB only)
                     0xFF68..=0xFF6B => self.ppu.set_byte(addr, value),
                     // SVBK - CGB Mode Only - WRAM Bank
