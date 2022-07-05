@@ -1,6 +1,3 @@
-use crate::cpu::registers::CpuFlag;
-use crate::cpu::CPU;
-
 // Nintendo documents describe the CPU & instructions speed in machine cycles while
 // this document describes them in clock cycles. Here is the translation:
 //   1 machine cycle = 4 clock cycles
@@ -9,6 +6,10 @@ use crate::cpu::CPU;
 // Clock Cycles      4.19MHz         4 cycles
 //
 //  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+
+use crate::cpu::registers::CpuFlag;
+use crate::cpu::CPU;
+
 const OP_CYCLES: [u32; 256] = [
     1, 3, 2, 2, 1, 1, 2, 1, 5, 2, 2, 2, 1, 1, 2, 1, // 0
     0, 3, 2, 2, 1, 1, 2, 1, 3, 2, 2, 2, 1, 1, 2, 1, // 1
@@ -200,7 +201,7 @@ impl CPU {
             // JR NC, r8
             0x30 => {
                 let n = self.get_byte_at_pc();
-                // Not Zero
+                // Not Carry
                 if !self.registers.has_flag(CpuFlag::C) {
                     self.inst_alu_jr(n);
                 }
@@ -841,6 +842,58 @@ impl CPU {
                 self.registers.pc = 0x38;
             }
         }
-        panic!("cpu: num cycles returned not implemented")
+        let ecycle = match op_code {
+            0x20 | 0x30 => {
+                if self.registers.has_flag(CpuFlag::Z) {
+                    0x00
+                } else {
+                    0x01
+                }
+            }
+            0x28 | 0x38 => {
+                if self.registers.has_flag(CpuFlag::Z) {
+                    0x01
+                } else {
+                    0x00
+                }
+            }
+            0xc0 | 0xd0 => {
+                if self.registers.has_flag(CpuFlag::Z) {
+                    0x00
+                } else {
+                    0x03
+                }
+            }
+            0xc8 | 0xcc | 0xd8 | 0xdc => {
+                if self.registers.has_flag(CpuFlag::Z) {
+                    0x03
+                } else {
+                    0x00
+                }
+            }
+            0xc2 | 0xd2 => {
+                if self.registers.has_flag(CpuFlag::Z) {
+                    0x00
+                } else {
+                    0x01
+                }
+            }
+            0xca | 0xda => {
+                if self.registers.has_flag(CpuFlag::Z) {
+                    0x01
+                } else {
+                    0x00
+                }
+            }
+            0xc4 | 0xd4 => {
+                if self.registers.has_flag(CpuFlag::Z) {
+                    0x00
+                } else {
+                    0x03
+                }
+            }
+            _ => 0x00,
+        };
+        OP_CYCLES[op_code as usize] + ecycle
     }
 }
