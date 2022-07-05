@@ -236,7 +236,7 @@ impl PPU {
     }
 
     fn draw_background(&mut self) {
-        let show_window = self.lcd_control.has_bit5() && self.window_y <= self.ly_compare;
+        let show_window = self.lcd_control.has_bit5() && self.window_y <= self.lcdc_y;
         let tile_base = if self.lcd_control.has_bit4() {
             0x8000
         } else {
@@ -244,9 +244,9 @@ impl PPU {
         };
         let window_x = self.window_x.wrapping_sub(7);
         let picture_y = if show_window {
-            self.ly_compare.wrapping_sub(self.window_y)
+            self.lcdc_y.wrapping_sub(self.window_y)
         } else {
-            self.scroll_y.wrapping_add(self.ly_compare)
+            self.scroll_y.wrapping_add(self.lcdc_y)
         };
         let tile_y = (u16::from(picture_y) >> 3) & 31;
 
@@ -322,7 +322,138 @@ impl PPU {
         }
     }
 
-    fn draw_sprites(&mut self) {}
+    // GameBoy video controller can display up to 40 sprites either in 8x8 or in 8x16 pixels. Because of a limitation of hardware,
+    // only ten sprites can be displayed per scan line. Sprite patterns have the same format as BG tiles, but they are taken from
+    // the Sprite Pattern Table located at $8000-8FFF and have unsigned numbering.
+    // Sprite attributes reside in the Sprite Attribute Table (OAM - Object Attribute Memory) at $FE00-FE9F. Each of the 40
+    // entries consists of four bytes with the following meanings:
+    //  Byte0 - Y Position
+    //      Specifies the sprites vertical position on the screen (minus 16).
+    //      An offscreen value (for example, Y=0 or Y>=160) hides the sprite.
+    //  Byte1 - X Position
+    //      Specifies the sprites horizontal position on the screen (minus 8).
+    //      An offscreen value (X=0 or X>=168) hides the sprite, but the sprite
+    //      still affects the priority ordering - a better way to hide a sprite is to set its Y-coordinate offscreen.
+    //  Byte2 - Tile/Pattern Number
+    //      Specifies the sprites Tile Number (00-FF). This (unsigned) value selects a tile from memory at 8000h-8FFFh. In CGB Mode this
+    //      could be either in VRAM Bank 0 or 1, depending on Bit 3 of the following byte. In 8x16 mode, the lower bit of the tile number
+    //      is ignored. Ie. the upper 8x8 tile is "NN AND FEh", and the lower 8x8 tile is "NN OR 01h".
+    //  Byte3 - Attributes/Flags:
+    //   Bit7   OBJ-to-BG Priority (0=OBJ Above BG, 1=OBJ Behind BG color 1-3)
+    //          (Used for both BG and Window. BG color 0 is always behind OBJ)
+    //   Bit6   Y flip          (0=Normal, 1=Vertically mirrored)
+    //   Bit5   X flip          (0=Normal, 1=Horizontally mirrored)
+    //   Bit4   Palette number  **Non CGB Mode Only** (0=OBP0, 1=OBP1)
+    //   Bit3   Tile VRAM-Bank  **CGB Mode Only**     (0=Bank 0, 1=Bank 1)
+    //   Bit2-0 Palette number  **CGB Mode Only**     (OBP0-7)
+    // Sprite Priorities and Conflicts
+    // When sprites with different x coordinate values overlap, the one with the smaller x coordinate (closer to the left) will have
+    // priority and appear above any others. This applies in Non CGB Mode only. When sprites with the same x coordinate values overlap,
+    // they have priority according to table ordering. (i.e. $FE00 - highest, $FE04 - next highest, etc.) In CGB Mode priorities are
+    // always assigned like this. Only 10 sprites can be displayed on any one line. When this limit is exceeded, the lower priority
+    // sprites (priorities listed above) won't be displayed. To keep unused sprites from affecting onscreen sprites set their Y
+    // coordinate to Y=0 or Y=>144+16. Just setting the X coordinate to X=0 or X=>160+8 on a sprite will hide it but it will still
+    // affect other sprites sharing the same lines.
+    // Writing Data to OAM Memory
+    // The recommened method is to write the data to normal RAM first, and to copy that RAM to OAM by using the DMA transfer function,
+    // initiated through DMA register (FF46). Beside for that, it is also possible to write data directly to the OAM area by using normal
+    // LD commands, this works only during the H-Blank and V-Blank periods. The current state of the LCD controller can be read out
+    // from the STAT register (FF41).
+    fn draw_sprites(&mut self) {
+        // Sprite tile size 8x8 or 8x16(2 stacked vertically).
+        let sprite_size = if self.lcd_control.has_bit2() { 16 } else { 8 };
+        for i in 0..40 {
+            let sprite_addr = 0xFE00 + (i as u16) * 4;
+            let picture_y = self.get_byte(sprite_addr).wrapping_sub(16);
+            let picture_x = self.get_byte(sprite_addr + 1).wrapping_sub(8);
+            let tile_number = self.get_byte(sprite_addr + 2)
+                & if self.lcd_control.has_bit2() {
+                    0xFE
+                } else {
+                    0xFF
+                };
+            let tile_attribute = Attribute::from(self.get_byte(sprite_addr + 3));
+
+            // If this is true the scanline is out of the area we care about
+            if picture_y <= 0xFF - sprite_size + 1 {
+                if self.lcdc_y < picture_y || self.lcdc_y > picture_y + sprite_size - 1 {
+                    continue;
+                }
+            } else {
+                if self.lcdc_y > picture_y.wrapping_add(sprite_size) - 1 {
+                    continue;
+                }
+            }
+            if picture_x >= (SCREEN_WIDTH as u8) && picture_x <= (0xFF - 7) {
+                continue;
+            }
+
+            let tile_y = if tile_attribute.y_flip {
+                sprite_size - 1 - self.lcdc_y.wrapping_sub(picture_y)
+            } else {
+                self.lcdc_y.wrapping_sub(picture_y)
+            };
+            let tile_y_addr = 0x8000u16 + u16::from(tile_number) * 16 + u16::from(tile_y) * 2;
+            let tile_y_data: [u8; 2] =
+                if self.mode == CartridgeMode::GBC && tile_attribute.vram_bank {
+                    let b1 = self.get_vram(1, tile_y_addr);
+                    let b2 = self.get_vram(1, tile_y_addr + 1);
+                    [b1, b2]
+                } else {
+                    let b1 = self.get_vram(0, tile_y_addr);
+                    let b2 = self.get_vram(0, tile_y_addr + 1);
+                    [b1, b2]
+                };
+
+            for x in 0..8 {
+                if picture_x.wrapping_add(x) >= (SCREEN_WIDTH as u8) {
+                    continue;
+                }
+                let tile_x = if tile_attribute.x_flip { 7 - x } else { x };
+                let color_low = if tile_y_data[0] & (0x80 >> tile_x) != 0 {
+                    1
+                } else {
+                    0
+                };
+                let color_high = if tile_y_data[1] & (0x80 >> tile_x) != 0 {
+                    2
+                } else {
+                    0
+                };
+                let color = color_high | color_low;
+                if color == 0 {
+                    continue;
+                }
+
+                // Confirm the priority of background and sprite.
+                let priority = self.priorities[picture_x.wrapping_add(x) as usize];
+                let skip = if self.mode == CartridgeMode::GBC && !self.lcd_control.has_bit0() {
+                    priority.1 == 0
+                } else if priority.0 {
+                    priority.1 != 0
+                } else {
+                    tile_attribute.priority && priority.1 != 0
+                };
+                if skip {
+                    continue;
+                }
+
+                if self.mode == CartridgeMode::GBC {
+                    let r = self.bgp_data[tile_attribute.cgb_palette_number][color][0];
+                    let g = self.bgp_data[tile_attribute.cgb_palette_number][color][1];
+                    let b = self.bgp_data[tile_attribute.cgb_palette_number][color][2];
+                    self.set_rgb(picture_x.wrapping_add(x) as usize, r, g, b);
+                } else {
+                    let color = if tile_attribute.palette_number == 1 {
+                        self.get_gray_shade(self.object_pallete_1, color) as u8
+                    } else {
+                        self.get_gray_shade(self.object_pallete_0, color) as u8
+                    };
+                    self.set_greyscale(picture_x.wrapping_add(x) as usize, color);
+                }
+            }
+        }
+    }
 }
 
 impl Memory for PPU {
