@@ -185,10 +185,182 @@ impl PPU {
 
 impl Memory for PPU {
     fn get_byte(&self, addr: u16) -> u8 {
-        panic!("ppu: get_byte not implemented")
+        match addr {
+            // VRAM (memory at 8000h-9FFFh) is accessable during Mode 0-2
+            0x8000..=0x9FFF => self.vram[self.vram_bank * 0x2000 + addr as usize - 0x8000],
+            // OAM (memory at FE00h-FE9Fh) is accessable during Mode 0-1
+            0xFE00..=0xFE9F => self.oam[addr as usize - 0xFE00],
+            // FF40 - LCDC - LCD Control (R/W)
+            0xFF40 => self.lcd_control.data,
+            // FF41 - STAT - LCDC Status (R/W)
+            0xFF41 => {
+                let bit6 = if self.lcd_status.lyc_interrupt_enabled {
+                    0x40
+                } else {
+                    0x00
+                };
+                let bit5 = if self.lcd_status.m2_oam_interrupt_enabled {
+                    0x20
+                } else {
+                    0x00
+                };
+                let bit4 = if self.lcd_status.m1_vblank_interrupt_enabled {
+                    0x10
+                } else {
+                    0x00
+                };
+                let bit3 = if self.lcd_status.m0_hblank_interrupt_enabled {
+                    0x08
+                } else {
+                    0x00
+                };
+                let bit2 = if self.lcdc_y == self.ly_compare {
+                    0x04
+                } else {
+                    0x00
+                };
+                bit6 | bit5 | bit4 | bit3 | bit2 | self.lcd_status.mode
+            }
+            // FF42 - SCY - Scroll Y (R/W)
+            0xFF42 => self.scroll_y,
+            // FF43 - SCX - Scroll X (R/W)
+            0xFF43 => self.scroll_x,
+            // FF44 - LY - LCDC Y-Coordinate (R)
+            0xFF44 => self.lcdc_y,
+            // FF45 - LYC - LY Compare (R/W)
+            0xFF45 => self.ly_compare,
+            // FF47 - BGP - BG Palette Data (R/W) - Non CGB Mode Only
+            0xFF47 => self.bg_palette,
+            // FF48 - OBP0 - Object Palette 0 Data (R/W) - Non CGB Mode Only
+            0xFF48 => self.object_pallete_0,
+            // FF49 - OBP1 - Object Palette 1 Data (R/W) - Non CGB Mode Only
+            0xFF49 => self.object_pallete_1,
+            // FF4A - WY - Window Y Position (R/W)
+            0xFF4A => self.window_y,
+            // FF4B - WX - Window X Position minus 7 (R/W)
+            0xFF4B => self.window_x,
+            // FF4F - VBK - CGB Mode Only - VRAM Bank
+            0xFF4F => 0xFE | self.vram_bank as u8,
+            // FF68 - BCPS/BGPI - CGB Mode Only - Background Palette Index
+            0xFF68 => self.bgpi.get(),
+            // FF69 - BCPD/BGPD - CGB Mode Only - Background Palette Data
+            0xFF69 => {
+                let r = self.bgpi.index as usize >> 3;
+                let c = self.bgpi.index as usize >> 1 & 0x3;
+                if self.bgpi.index & 0x01 == 0x00 {
+                    let a = self.bgp_data[r][c][0];
+                    let b = self.bgp_data[r][c][1] << 5;
+                    a | b
+                } else {
+                    let a = self.bgp_data[r][c][1] >> 3;
+                    let b = self.bgp_data[r][c][2] << 2;
+                    a | b
+                }
+            }
+            // FF6A - OCPS/OBPI - CGB Mode Only - Sprite Palette Index
+            0xFF6A => self.obpi.get(),
+            // FF6B - OCPD/OBPD - CGB Mode Only - Sprite Palette Data
+            0xFF6B => {
+                let r = self.obpi.index as usize >> 3;
+                let c = self.obpi.index as usize >> 1 & 0x3;
+                if self.obpi.index & 0x01 == 0x00 {
+                    let a = self.obp_data[r][c][0];
+                    let b = self.obp_data[r][c][1] << 5;
+                    a | b
+                } else {
+                    let a = self.obp_data[r][c][1] >> 3;
+                    let b = self.obp_data[r][c][2] << 2;
+                    a | b
+                }
+            }
+            _ => panic!("ppu: invalid address {:#06X?}", addr),
+        }
     }
 
     fn set_byte(&mut self, addr: u16, value: u8) {
-        panic!("ppu: set_byte not implemented")
+        match addr {
+            // VRAM (memory at 8000h-9FFFh) is accessable during Mode 0-2
+            0x8000..=0x9FFF => self.vram[self.vram_bank * 0x2000 + addr as usize - 0x8000] = value,
+            // OAM (memory at FE00h-FE9Fh) is accessable during Mode 0-1
+            0xFE00..=0xFE9F => self.oam[addr as usize - 0xfe00] = value,
+            // FF40 - LCDC - LCD Control (R/W)
+            0xFF40 => {
+                self.lcd_control.data = value;
+                if !self.lcd_control.has_bit7() {
+                    self.dots = 0;
+                    self.lcdc_y = 0;
+                    self.lcd_status.mode = 0;
+                    // Clean screen.
+                    self.data = [[[0xffu8; 3]; SCREEN_WIDTH]; SCREEN_HEIGHT];
+                    self.vblank = true;
+                }
+            }
+            // FF41 - STAT - LCDC Status (R/W)
+            0xFF41 => {
+                self.lcd_status.lyc_interrupt_enabled = value & 0x40 != 0x00;
+                self.lcd_status.m2_oam_interrupt_enabled = value & 0x20 != 0x00;
+                self.lcd_status.m1_vblank_interrupt_enabled = value & 0x10 != 0x00;
+                self.lcd_status.m0_hblank_interrupt_enabled = value & 0x08 != 0x00;
+            }
+            // FF42 - SCY - Scroll Y (R/W)
+            0xFF42 => self.scroll_y = value,
+            // FF43 - SCX - Scroll X (R/W)
+            0xFF43 => self.scroll_x = value,
+            // FF44 - LY - LCDC Y-Coordinate (R)
+            0xFF44 => {}
+            // FF45 - LYC - LY Compare (R/W)
+            0xFF45 => self.ly_compare = value,
+            // FF47 - BGP - BG Palette Data (R/W) - Non CGB Mode Only
+            0xFF47 => self.bg_palette = value,
+            // FF48 - OBP0 - Object Palette 0 Data (R/W) - Non CGB Mode Only
+            0xFF48 => self.object_pallete_0 = value,
+            // FF49 - OBP1 - Object Palette 1 Data (R/W) - Non CGB Mode Only
+            0xFF49 => self.object_pallete_1 = value,
+            // FF4A - WY - Window Y Position (R/W)
+            0xFF4A => self.window_y = value,
+            // FF4B - WX - Window X Position minus 7 (R/W)
+            0xFF4B => self.window_x = value,
+            // FF4F - VBK - CGB Mode Only - VRAM Bank
+            0xFF4F => self.vram_bank = (value & 0x01) as usize,
+            // FF68 - BCPS/BGPI - CGB Mode Only - Background Palette Index
+            0xFF68 => self.bgpi.set(value),
+            // FF69 - BCPD/BGPD - CGB Mode Only - Background Palette Data
+            0xFF69 => {
+                let r = self.bgpi.index as usize >> 3;
+                let c = self.bgpi.index as usize >> 1 & 0x03;
+                if self.bgpi.index & 0x01 == 0x00 {
+                    self.bgp_data[r][c][0] = value & 0x1F;
+                    self.bgp_data[r][c][1] = (self.bgp_data[r][c][1] & 0x18) | (value >> 5);
+                } else {
+                    self.bgp_data[r][c][1] =
+                        (self.bgp_data[r][c][1] & 0x07) | ((value & 0x03) << 3);
+                    self.bgp_data[r][c][2] = (value >> 2) & 0x1F;
+                }
+                if self.bgpi.auto_increment {
+                    self.bgpi.index += 0x01;
+                    self.bgpi.index &= 0x3F;
+                }
+            }
+            // FF6A - OCPS/OBPI - CGB Mode Only - Sprite Palette Index
+            0xFF6A => self.obpi.set(value),
+            // FF6B - OCPD/OBPD - CGB Mode Only - Sprite Palette Data
+            0xFF6B => {
+                let r = self.obpi.index as usize >> 3;
+                let c = self.obpi.index as usize >> 1 & 0x03;
+                if self.obpi.index & 0x01 == 0x00 {
+                    self.obp_data[r][c][0] = value & 0x1F;
+                    self.obp_data[r][c][1] = (self.obp_data[r][c][1] & 0x18) | (value >> 5);
+                } else {
+                    self.obp_data[r][c][1] =
+                        (self.obp_data[r][c][1] & 0x07) | ((value & 0x03) << 3);
+                    self.obp_data[r][c][2] = (value >> 2) & 0x1F;
+                }
+                if self.obpi.auto_increment {
+                    self.obpi.index += 0x01;
+                    self.obpi.index &= 0x3F;
+                }
+            }
+            _ => panic!("ppu: invalid address {:#06X?}", addr),
+        }
     }
 }

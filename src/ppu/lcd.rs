@@ -29,7 +29,7 @@
 // but still want to display the window wouldn't work properly on CGBs.
 #[derive(Debug, Copy, Clone)]
 pub struct LCDControl {
-    data: u8,
+    pub data: u8,
 }
 
 impl LCDControl {
@@ -37,35 +37,35 @@ impl LCDControl {
         LCDControl { data: 0b0100_1000 }
     }
 
-    fn has_bit7(&self) -> bool {
+    pub fn has_bit7(&self) -> bool {
         self.data & 0b1000_0000 != 0x00
     }
 
-    fn has_bit6(&self) -> bool {
+    pub fn has_bit6(&self) -> bool {
         self.data & 0b0100_0000 != 0x00
     }
 
-    fn has_bit5(&self) -> bool {
+    pub fn has_bit5(&self) -> bool {
         self.data & 0b0010_0000 != 0x00
     }
 
-    fn has_bit4(&self) -> bool {
+    pub fn has_bit4(&self) -> bool {
         self.data & 0b0001_0000 != 0x00
     }
 
-    fn has_bit3(&self) -> bool {
+    pub fn has_bit3(&self) -> bool {
         self.data & 0b0000_1000 != 0x00
     }
 
-    fn has_bit2(&self) -> bool {
+    pub fn has_bit2(&self) -> bool {
         self.data & 0b0000_0100 != 0x00
     }
 
-    fn has_bit1(&self) -> bool {
+    pub fn has_bit1(&self) -> bool {
         self.data & 0b0000_0010 != 0x00
     }
 
-    fn has_bit0(&self) -> bool {
+    pub fn has_bit0(&self) -> bool {
         self.data & 0b0000_0001 != 0x00
     }
 }
@@ -107,20 +107,20 @@ impl LCDControl {
 #[derive(Debug, Copy, Clone)]
 pub struct LCDStatus {
     //  Bit 6 - LYC=LY Coincidence Interrupt (1=Enable) (Read/Write)
-    lyc_interrupt_enabled: bool,
+    pub lyc_interrupt_enabled: bool,
     //  Bit 5 - Mode 2 OAM Interrupt         (1=Enable) (Read/Write)
-    m2_oam_interrupt_enabled: bool,
+    pub m2_oam_interrupt_enabled: bool,
     //  Bit 4 - Mode 1 V-Blank Interrupt     (1=Enable) (Read/Write)
-    m1_vblank_interrupt_enabled: bool,
+    pub m1_vblank_interrupt_enabled: bool,
     //  Bit 3 - Mode 0 H-Blank Interrupt     (1=Enable) (Read/Write)
-    m0_hblank_interrupt_enabled: bool,
+    pub m0_hblank_interrupt_enabled: bool,
     //  Bit 2 - Coincidence Flag  (0:LYC<>LY, 1:LYC=LY) (Read Only)
     //  Bit 1-0 - Mode Flag       (Mode 0-3, see below) (Read Only)
     //           0: During H-Blank
     //           1: During V-Blank
     //           2: During Searching OAM-RAM
     //           3: During Transfering Data to LCD Driver
-    mode: u8,
+    pub mode: u8,
 }
 
 impl LCDStatus {
@@ -143,9 +143,10 @@ impl LCDStatus {
 // Data can be read/written to/from the specified index address through Register FF69. When the Auto Increment
 // Bit is set then the index is automatically incremented after each <write> to FF69. Auto Increment has no
 // effect when <reading> from FF69, so the index must be manually incremented in that case.
+#[derive(Debug, Copy, Clone)]
 pub struct BGPI {
-    index: u8,
-    auto_increment: bool,
+    pub index: u8,
+    pub auto_increment: bool,
 }
 
 impl BGPI {
@@ -156,12 +157,12 @@ impl BGPI {
         }
     }
 
-    fn get(&self) -> u8 {
+    pub fn get(&self) -> u8 {
         let auto_inc = if self.auto_increment { 0x80 } else { 0x00 };
         auto_inc | self.index
     }
 
-    fn set(&mut self, value: u8) {
+    pub fn set(&mut self, value: u8) {
         self.auto_increment = value & 0x80 != 0x00;
         self.index = value & 0x3F;
     }
