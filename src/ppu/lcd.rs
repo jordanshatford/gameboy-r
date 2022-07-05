@@ -143,13 +143,13 @@ impl LCDStatus {
 // Data can be read/written to/from the specified index address through Register FF69. When the Auto Increment
 // Bit is set then the index is automatically incremented after each <write> to FF69. Auto Increment has no
 // effect when <reading> from FF69, so the index must be manually incremented in that case.
-struct BGPI {
+pub struct BGPI {
     index: u8,
     auto_increment: bool,
 }
 
 impl BGPI {
-    fn new() -> BGPI {
+    pub fn new() -> BGPI {
         BGPI {
             index: 0x00,
             auto_increment: false,
