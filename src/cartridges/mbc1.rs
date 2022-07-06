@@ -126,7 +126,7 @@ impl Memory for MBC1 {
             // RAM Bank 00-03, if any (Read/Write)
             0xA000..=0xBFFF => {
                 if self.ram_enabled {
-                    let index = self.get_ram_bank() * 0x2000 + addr as usize + 0xA000;
+                    let index = self.get_ram_bank() * 0x2000 + addr as usize - 0xA000;
                     self.ram[index] = value;
                 }
             }
@@ -145,7 +145,7 @@ impl Memory for MBC1 {
                     0x00 => 0x01,
                     _ => bank_number,
                 };
-                self.bank = bank_number;
+                self.bank = (self.bank & 0x60) | bank_number;
             }
             // RAM Bank Number - or - Upper Bits of ROM Bank Number (Write Only)
             0x4000..=0x5FFF => {
