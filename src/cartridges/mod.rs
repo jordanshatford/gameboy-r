@@ -68,7 +68,7 @@ pub trait Cartridge: Memory + Stable + Send {
     // LOCKS ITSELF UP if these bytes are incorrect. A CGB verifies only the first 18h bytes of the bitmap,
     // but others (for example a pocket gameboy) verify all 30h bytes.
     fn verify_nintendo_logo(&self) {
-        for addr in 0x00..0x48 {
+        for addr in 0x00..48 {
             if self.get_byte(0x0104 + addr as u16) != NINTENDO_LOGO[addr as usize] {
                 panic!("cartridge: could not validate nintendo logo")
             }
@@ -100,7 +100,7 @@ pub trait Cartridge: Memory + Stable + Send {
     // non-CGB-mode with uninitialized palettes. Purpose unknown, eventually this has been
     // supposed to be used to colorize monochrome games that include fixed palette data at a special
     // location in ROM.
-    fn get_cartridge_mode(&self) -> CartridgeMode {
+    fn get_mode(&self) -> CartridgeMode {
         match self.get_byte(0x0143) & 0x80 {
             0x80 => CartridgeMode::GBC,
             _ => CartridgeMode::GB,

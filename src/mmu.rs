@@ -63,7 +63,7 @@ pub struct MMU {
 
 impl MMU {
     pub fn new(cartridge: Box<dyn Cartridge>) -> MMU {
-        let cartridge_mode = cartridge.get_cartridge_mode();
+        let cartridge_mode = cartridge.get_mode();
         let mut mmu = MMU {
             cartridge: cartridge,
             apu: None,
