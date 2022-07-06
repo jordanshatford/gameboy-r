@@ -89,7 +89,6 @@ impl MMU {
         mmu.set_byte(0xFF12, 0xF3);
         mmu.set_byte(0xFF14, 0xBF);
         mmu.set_byte(0xFF16, 0x3F);
-        mmu.set_byte(0xFF16, 0x3F);
         mmu.set_byte(0xFF17, 0x00);
         mmu.set_byte(0xFF19, 0xBF);
         mmu.set_byte(0xFF1A, 0x7F);
@@ -99,7 +98,7 @@ impl MMU {
         mmu.set_byte(0xFF20, 0xFF);
         mmu.set_byte(0xFF21, 0x00);
         mmu.set_byte(0xFF22, 0x00);
-        mmu.set_byte(0xFF23, 0xbF);
+        mmu.set_byte(0xFF23, 0xBF);
         mmu.set_byte(0xFF24, 0x77);
         mmu.set_byte(0xFF25, 0xF3);
         mmu.set_byte(0xFF26, 0xF1);
@@ -241,7 +240,7 @@ impl Memory for MMU {
                         Some(apu) => apu.get_byte(addr),
                         None => 0x00,
                     },
-                    // LCD Control Register, LCD Status Register,  LCD Position and Scrolling, LCD Monochrome Palettes
+                    // LCD Control Register, LCD Status Register, LCD Position and Scrolling, LCD Monochrome Palettes
                     0xFF40..=0xFF45 | 0xFF47..=0xFF4b => self.ppu.get_byte(addr),
                     // KEY1 - CGB Mode Only - Prepare Speed Switch
                     0xFF4D => {
@@ -320,8 +319,21 @@ impl Memory for MMU {
                         .apu
                         .as_mut()
                         .map_or((), |apu| apu.set_byte(addr, value)),
-                    // LCD Control Register, LCD Status Register,  LCD Position and Scrolling, LCD Monochrome Palettes
-                    0xFF40..=0xFF45 | 0xFF47..=0xFF4b => self.ppu.set_byte(addr, value),
+                    // LCD Control Register, LCD Status Register,  LCD Position and Scrolling
+                    0xFF40..=0xFF45 => self.ppu.set_byte(addr, value),
+                    // FF46 - DMA - DMA Transfer and Start Address (W)
+                    0xFF46 => {
+                        // Source: XX00-XX9F ;XX in range from 00-F1h
+                        assert!(value <= 0xF1);
+                        let base = u16::from(value) << 8;
+                        for i in 0..0xA0 {
+                            let value = self.get_byte(base + i);
+                            // Destination: FE00-FE9F
+                            self.set_byte(0xFE00 + i, value);
+                        }
+                    }
+                    // LCD Monochrome Palettes, LCD Color Palettes (CGB only)
+                    0xFF47..=0xFF4B => self.ppu.set_byte(addr, value),
                     // KEY1 - CGB Mode Only - Prepare Speed Switch
                     0xFF4D => {
                         // This register is used to prepare the gameboy to switch between CGB Double Speed Mode and Normal Speed Mode.

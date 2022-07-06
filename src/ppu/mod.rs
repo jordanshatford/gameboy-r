@@ -500,9 +500,9 @@ impl PPU {
                 }
 
                 if self.mode == CartridgeMode::GBC {
-                    let r = self.bgp_data[tile_attribute.cgb_palette_number][color][0];
-                    let g = self.bgp_data[tile_attribute.cgb_palette_number][color][1];
-                    let b = self.bgp_data[tile_attribute.cgb_palette_number][color][2];
+                    let r = self.obp_data[tile_attribute.cgb_palette_number][color][0];
+                    let g = self.obp_data[tile_attribute.cgb_palette_number][color][1];
+                    let b = self.obp_data[tile_attribute.cgb_palette_number][color][2];
                     self.set_rgb(picture_x.wrapping_add(x) as usize, r, g, b);
                 } else {
                     let color = if tile_attribute.palette_number == 1 {
