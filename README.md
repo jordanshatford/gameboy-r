@@ -8,7 +8,7 @@ $ cargo run --release -- "./path/to/rom.gb"
 ```
 The following options can be specified
 ```
--x, --scale    Scale the window (1, 2, 4, or 8) Default: 4
+-x, --scale    Scale the window 1 (Default), 2, 4
 ```
 
 ### Controls:
