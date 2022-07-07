@@ -21,12 +21,13 @@ pub enum Speed {
 // Bit 2: Timer    Interrupt Request (INT $50)  (1=Request)
 // Bit 3: Serial   Interrupt Request (INT $58)  (1=Request)
 // Bit 4: Joypad   Interrupt Request (INT $60)  (1=Request)
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Eq, PartialEq)]
 pub enum InterruptFlag {
     VBlank = 0b0000_0001,
     LCDStat = 0b0000_0010,
     Timer = 0b0000_0100,
-    Serial = 0b0000_1000,
+    // Serial is not fully implemented so this is never used
+    // Serial = 0b0000_1000,
     Joypad = 0b0001_0000,
     None = 0b0000_0000,
 }

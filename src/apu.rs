@@ -4,7 +4,7 @@ use super::memory::Memory;
 pub struct APU {}
 
 impl APU {
-    pub fn new() -> APU {
+    pub fn _new() -> APU {
         APU {}
     }
 
