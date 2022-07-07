@@ -48,8 +48,9 @@ impl Gameboy {
         self.mmu.borrow_mut().cartridge.sav();
     }
 
-    pub fn get_rom_name(&self) -> String {
-        self.mmu.borrow().cartridge.get_title()
+    pub fn get_title(&self) -> String {
+        let rom_name = self.mmu.borrow().cartridge.get_title();
+        format!("Game Boy R - {rom_name}")
     }
 
     pub fn get_screen_dimensions(&self) -> (usize, usize) {
