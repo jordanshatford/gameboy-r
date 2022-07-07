@@ -1,4 +1,4 @@
-use argparse::{ArgumentParser, Store};
+use argparse::{ArgumentParser, Print, Store};
 use gameboy_r::gameboy::{Gameboy, GameboyButton};
 use minifb::{Key, Scale, Window, WindowOptions};
 
@@ -8,6 +8,14 @@ fn main() {
     {
         let mut arg_parser = ArgumentParser::new();
         arg_parser.set_description("Game Boy R");
+        arg_parser.add_option(
+            &["-v", "--version"],
+            Print(format!(
+                "Game Boy R version: v{}",
+                env!("CARGO_PKG_VERSION").to_string()
+            )),
+            "Show current version of the program",
+        );
         arg_parser.refer(&mut window_scale).add_option(
             &["-x", "--scale"],
             Store,

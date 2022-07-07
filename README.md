@@ -68,6 +68,6 @@ Left + Right <--- |-[_   _]-       .-. (   ) |
 ## References:
 - [Pandocs](https://bgb.bircd.org/pandocs.htm)
 - [GBDev Pandocs](https://gbdev.io/pandocs/)
-- [GBDev Wiki](https://gbdev.gg8.se/wiki/articles/Video_Display#VRAM_.28memory_at_8000h-9FFFh.29_is_accessible_during_Mode_0-2)
+- [GBDev Wiki](https://gbdev.gg8.se/wiki/articles/Video_Display)
 - [GBOps](https://izik1.github.io/gbops/)
 - [Pastraiser (OP Codes)](https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html)
