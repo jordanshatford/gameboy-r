@@ -2,6 +2,7 @@ mod apu;
 mod cartridges;
 mod clock;
 mod cpu;
+pub mod gameboy;
 mod joypad;
 mod memory;
 mod mmu;
