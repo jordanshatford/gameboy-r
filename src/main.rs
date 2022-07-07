@@ -1,10 +1,11 @@
-use argparse::{ArgumentParser, Print, Store};
+use argparse::{ArgumentParser, Print, Store, StoreTrue};
 use gameboy_r::gameboy::{Gameboy, GameboyButton};
 use minifb::{Key, Scale, Window, WindowOptions};
 
 fn main() {
     let mut rom_path = String::from("");
     let mut window_scale = 1;
+    let mut skip_checks = false;
     {
         let mut arg_parser = ArgumentParser::new();
         arg_parser.set_description("Game Boy R");
@@ -20,6 +21,11 @@ fn main() {
             &["-x", "--scale"],
             Store,
             "Scale the window by a factor of 1, 2, 4 (Default: 1)",
+        );
+        arg_parser.refer(&mut skip_checks).add_option(
+            &["--skip-checks"],
+            StoreTrue,
+            "Skip header checksum and nintendo logo checks for ROM",
         );
         arg_parser
             .refer(&mut rom_path)
@@ -37,7 +43,7 @@ fn main() {
         _ => panic!("gameboy-r: unsupported scale options (valid options: 1, 2, 4)"),
     };
 
-    let mut gameboy = Gameboy::new(rom_path);
+    let mut gameboy = Gameboy::new(rom_path, skip_checks);
 
     let (width, height) = gameboy.get_screen_dimensions();
 

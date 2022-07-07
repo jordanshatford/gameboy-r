@@ -126,7 +126,7 @@ pub trait Cartridge: Memory + Stable + Send {
 //  11h  MBC3                     FDh  BANDAI TAMA5
 //  12h  MBC3+RAM                 FEh  HuC3
 //  13h  MBC3+RAM+BATTERY         FFh  HuC1+RAM+BATTERY
-pub fn new(path: impl AsRef<Path>) -> Box<dyn Cartridge> {
+pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
     let mut file = File::open(path.as_ref()).unwrap();
     let mut rom = Vec::new();
     file.read_to_end(&mut rom).unwrap();
@@ -156,8 +156,10 @@ pub fn new(path: impl AsRef<Path>) -> Box<dyn Cartridge> {
         }
         byte => panic!("cartridge: unsupported type {:#04X?}", byte),
     };
-    cartridge.verify_nintendo_logo();
-    cartridge.verify_header_checksum();
+    if !skip_checks {
+        cartridge.verify_nintendo_logo();
+        cartridge.verify_header_checksum();
+    }
     cartridge
 }
 

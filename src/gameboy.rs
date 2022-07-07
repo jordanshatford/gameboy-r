@@ -27,8 +27,8 @@ pub struct Gameboy {
 }
 
 impl Gameboy {
-    pub fn new(path: impl AsRef<Path>) -> Gameboy {
-        let cartridge = cartridges::new(path);
+    pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Gameboy {
+        let cartridge = cartridges::new(path, skip_checks);
         let cartridge_mode = cartridge.get_mode();
         let mmu = Rc::new(RefCell::new(MMU::new(cartridge)));
         let cpu = RealTimeCPU::new(cartridge_mode, mmu.clone());

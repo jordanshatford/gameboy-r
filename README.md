@@ -8,7 +8,8 @@ $ cargo run --release -- "./path/to/rom.gb"
 ```
 The following options can be specified
 ```
--x, --scale    Scale the window 1 (Default), 2, 4
+-x, --scale         Scale the window 1 (Default), 2, 4
+    --skip-checks   Skip header checksum and nintendo logo checks for ROM
 ```
 
 ### Controls:
