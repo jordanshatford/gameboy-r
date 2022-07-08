@@ -1,4 +1,5 @@
 mod mbc1;
+mod mbc2;
 mod rom;
 
 use std::fs::File;
@@ -6,6 +7,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use crate::cartridges::mbc1::MBC1;
+use crate::cartridges::mbc2::MBC2;
 use crate::cartridges::rom::RomOnly;
 use crate::memory::Memory;
 
@@ -159,9 +161,19 @@ pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
         }
         0x03 => {
             let ram_size = get_ram_size(rom.as_ref());
-            let sav_path = path.as_ref().to_path_buf().with_extension("sav");
-            let ram = read_ram_from_sav(sav_path.clone(), ram_size);
-            Box::new(MBC1::new(rom, ram, sav_path))
+            let save_path = path.as_ref().to_path_buf().with_extension("sav");
+            let ram = read_ram_from_save(save_path.clone(), ram_size);
+            Box::new(MBC1::new(rom, ram, save_path))
+        }
+        0x05 => {
+            let ram_size = 512;
+            Box::new(MBC2::new(rom, vec![0; ram_size], ""))
+        }
+        0x06 => {
+            let ram_size = 512;
+            let save_path = path.as_ref().to_path_buf().with_extension("sav");
+            let ram = read_ram_from_save(save_path.clone(), ram_size);
+            Box::new(MBC2::new(rom, ram, save_path))
         }
         byte => panic!("cartridge: unsupported type {:#04X?}", byte),
     };
@@ -230,7 +242,7 @@ pub fn get_ram_size(rom: &Vec<u8>) -> usize {
 }
 
 // Read RAM data from external sav file when available
-pub fn read_ram_from_sav(path: impl AsRef<Path>, size: usize) -> Vec<u8> {
+pub fn read_ram_from_save(path: impl AsRef<Path>, size: usize) -> Vec<u8> {
     match File::open(path) {
         Ok(mut f) => {
             let mut ram = Vec::new();
