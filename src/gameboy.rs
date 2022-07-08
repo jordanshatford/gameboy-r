@@ -45,7 +45,7 @@ impl Gameboy {
     }
 
     pub fn save(&mut self) {
-        self.mmu.borrow_mut().cartridge.sav();
+        self.mmu.borrow_mut().cartridge.save();
     }
 
     pub fn get_title(&self) -> String {

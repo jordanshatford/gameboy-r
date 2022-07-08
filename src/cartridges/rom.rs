@@ -26,8 +26,6 @@ impl Memory for RomOnly {
     fn set_byte(&mut self, _: u16, _: u8) {}
 }
 
-impl Stable for RomOnly {
-    fn sav(&self) {}
-}
+impl Stable for RomOnly {}
 
 impl Cartridge for RomOnly {}

@@ -46,8 +46,6 @@
 // The program may freely switch between both modes, the only limitiation is that only RAM Bank 00h can be
 // used during Mode 0, and only ROM Banks 00-1Fh can be used during Mode 1.
 
-use std::fs::File;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use crate::cartridges::{Cartridge, Stable};
@@ -64,11 +62,11 @@ pub struct MBC1 {
     bank_mode: BankMode,
     bank: u8,
     ram_enabled: bool,
-    sav_path: PathBuf,
+    save_path: PathBuf,
 }
 
 impl MBC1 {
-    pub fn new(rom: Vec<u8>, ram: Vec<u8>, sav: impl AsRef<Path>) -> MBC1 {
+    pub fn new(rom: Vec<u8>, ram: Vec<u8>, save_path: impl AsRef<Path>) -> MBC1 {
         MBC1 {
             rom,
             ram,
@@ -76,7 +74,7 @@ impl MBC1 {
             bank_mode: BankMode::Rom,
             bank: 0x01,
             ram_enabled: false,
-            sav_path: PathBuf::from(sav.as_ref()),
+            save_path: PathBuf::from(save_path.as_ref()),
         }
     }
 
@@ -165,13 +163,8 @@ impl Memory for MBC1 {
 }
 
 impl Stable for MBC1 {
-    fn sav(&self) {
-        if self.sav_path.to_str().unwrap().is_empty() {
-            return;
-        }
-        File::create(self.sav_path.clone())
-            .and_then(|mut f| f.write_all(&self.ram))
-            .unwrap()
+    fn save(&self) {
+        self.save_to_file(self.save_path.clone(), &self.ram);
     }
 }
 

@@ -2,8 +2,8 @@ mod mbc1;
 mod rom;
 
 use std::fs::File;
-use std::io::Read;
-use std::path::Path;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 
 use crate::cartridges::mbc1::MBC1;
 use crate::cartridges::rom::RomOnly;
@@ -16,7 +16,16 @@ pub enum CartridgeMode {
 }
 
 pub trait Stable {
-    fn sav(&self);
+    fn save(&self) {}
+
+    fn save_to_file(&self, path: PathBuf, contents: &[u8]) {
+        if path.to_str().unwrap().is_empty() {
+            return;
+        }
+        File::create(path.clone())
+            .and_then(|mut f| f.write_all(contents))
+            .unwrap()
+    }
 }
 
 // These bytes define the bitmap of the Nintendo logo that is displayed when the gameboy gets turned on.
