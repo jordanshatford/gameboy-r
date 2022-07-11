@@ -63,8 +63,7 @@ Left + Right <--- |-[_   _]-       .-. (   ) |
   - [x] MBC1 (max 2MByte ROM and/or 32KByte RAM)
   - [x] MBC2 (max 256KByte ROM and 512x4 bits RAM)
   - [x] MBC3 (max 2MByte ROM and/or 64KByte RAM and Timer)
-  - [ ] MBC5 (max 8MByte ROM and/or 128KByte RAM)
-  - [ ] HuC1 (MBC with Infrared Controller)
+  - [x] MBC5 (max 8MByte ROM and/or 128KByte RAM)
 
 ## References:
 - [Pandocs](https://bgb.bircd.org/pandocs.htm)
@@ -72,5 +71,7 @@ Left + Right <--- |-[_   _]-       .-. (   ) |
 - [GBDev Wiki](https://gbdev.gg8.se/wiki/articles/Video_Display)
 - [GBOps](https://izik1.github.io/gbops/)
 - [Pastraiser (OP Codes)](https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html)
+- [Cartridge Header](https://gbdev.gg8.se/wiki/articles/The_Cartridge_Header)
+- [Cartridge Types](https://gbdev.gg8.se/wiki/articles/Memory_Bank_Controllers)
 - [GB ROMS](https://www.romsgames.net/roms/gameboy/)
 - [GBC ROMS](https://www.romsgames.net/roms/gameboy-color/)
