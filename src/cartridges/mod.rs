@@ -1,6 +1,5 @@
 mod mbc1;
 mod mbc2;
-mod mbc3;
 mod rom;
 
 use std::fs::File;
