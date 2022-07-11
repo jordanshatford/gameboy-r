@@ -1,5 +1,6 @@
 mod mbc1;
 mod mbc2;
+mod mbc3;
 mod rom;
 
 use std::fs::File;
@@ -8,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 use crate::cartridges::mbc1::Mbc1;
 use crate::cartridges::mbc2::Mbc2;
+use crate::cartridges::mbc3::Mbc3;
 use crate::cartridges::rom::RomOnly;
 use crate::memory::Memory;
 
@@ -174,6 +176,29 @@ pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
             let save_path = path.as_ref().to_path_buf().with_extension("sav");
             let ram = read_ram_from_save(save_path.clone(), ram_size);
             Box::new(Mbc2::new(rom, ram, save_path))
+        }
+        0x0F => {
+            let save_path = path.as_ref().to_path_buf().with_extension("sav");
+            let rtc_save_path = path.as_ref().to_path_buf().with_extension("rtc");
+            Box::new(Mbc3::new(rom, vec![], save_path, rtc_save_path))
+        }
+        0x10 => {
+            let ram_size = get_ram_size(rom.as_ref());
+            let save_path = path.as_ref().to_path_buf().with_extension("sav");
+            let ram = read_ram_from_save(save_path.clone(), ram_size);
+            let rtc_save_path = path.as_ref().to_path_buf().with_extension("rtc");
+            Box::new(Mbc3::new(rom, ram, save_path, rtc_save_path))
+        }
+        0x11 => Box::new(Mbc3::new(rom, vec![], "", "")),
+        0x12 => {
+            let ram_size = get_ram_size(rom.as_ref());
+            Box::new(Mbc3::new(rom, vec![0; ram_size], "", ""))
+        }
+        0x13 => {
+            let ram_size = get_ram_size(rom.as_ref());
+            let save_path = path.as_ref().to_path_buf().with_extension("sav");
+            let ram = read_ram_from_save(save_path.clone(), ram_size);
+            Box::new(Mbc3::new(rom, ram, save_path, ""))
         }
         byte => panic!("cartridge: unsupported type {:#04X?}", byte),
     };
