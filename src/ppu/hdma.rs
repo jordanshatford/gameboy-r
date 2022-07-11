@@ -1,14 +1,14 @@
 use crate::memory::Memory;
 
 #[derive(Debug, Eq, PartialEq)]
-pub enum HDMAMode {
+pub enum HdmaMode {
     // When using this transfer method, all data is transferred at once. The execution of the program
     // is halted until the transfer has completed. Note that the General Purpose DMA blindly attempts
     // to copy the data, even if the CD controller is currently accessing VRAM. So General Purpose DMA
     // should be used only if the Display is disabled, or during V-Blank, or (for rather short blocks)
     // during H-Blank. The execution of the program continues when the transfer has been completed, and
     // FF55 then contains a value of FFh.
-    GDMA,
+    Gdma,
     // The H-Blank DMA transfers 10h bytes of data during each H-Blank, ie. at LY=0-143, no data is
     // transferred during V-Blank (LY=144-153), but the transfer will then continue at LY=00. The
     // execution of the program is halted during the separate transfers, but the program execution
@@ -20,30 +20,30 @@ pub enum HDMAMode {
     // possible to terminate an active H-Blank transfer by writing zero to Bit 7 of FF55. In that case
     // reading from FF55 will return how many $10 "blocks" remained (minus 1) in the lower 7 bits, but Bit
     // 7 will be read as "1". Stopping the transfer doesn't set HDMA1-4 to $FF.
-    HDMA,
+    Hdma,
 }
 
-pub struct HDMA {
+pub struct Hdma {
     pub source: u16,
     pub destination: u16,
     pub active: bool,
-    pub mode: HDMAMode,
+    pub mode: HdmaMode,
     pub remain: u8,
 }
 
-impl HDMA {
-    pub fn new() -> HDMA {
-        HDMA {
+impl Hdma {
+    pub fn new() -> Hdma {
+        Hdma {
             source: 0x0000,
             destination: 0x0000,
             active: false,
-            mode: HDMAMode::GDMA,
+            mode: HdmaMode::Gdma,
             remain: 0x00,
         }
     }
 }
 
-impl Memory for HDMA {
+impl Memory for Hdma {
     fn get_byte(&self, addr: u16) -> u8 {
         match addr {
             // HDMA1 - CGB Mode Only - New DMA Source, High
@@ -97,7 +97,7 @@ impl Memory for HDMA {
             // (divided by 10h, minus 1). Ie. lengths of 10h-800h bytes can be defined by the values 00h-7Fh.
             // And the upper bit of FF55 indicates the Transfer Mode
             0xFF55 => {
-                if self.active && self.mode == HDMAMode::HDMA {
+                if self.active && self.mode == HdmaMode::Hdma {
                     if value & 0x80 == 0x00 {
                         self.active = false;
                     };
@@ -106,9 +106,9 @@ impl Memory for HDMA {
                 self.active = true;
                 self.remain = value & 0x7F;
                 self.mode = if value & 0x80 != 0x00 {
-                    HDMAMode::HDMA
+                    HdmaMode::Hdma
                 } else {
-                    HDMAMode::GDMA
+                    HdmaMode::Gdma
                 };
             }
             _ => panic!("hdma: invalid address {:#06X?}", addr),

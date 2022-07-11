@@ -6,22 +6,22 @@ use crate::cartridges::CartridgeMode;
 use crate::memory::Memory;
 use crate::mmu::InterruptFlag;
 use crate::ppu::attribute::Attribute;
-use crate::ppu::lcd::{LCDControl, LCDStatus, BGPI};
+use crate::ppu::lcd::{Bgpi, LcdControl, LcdStatus};
 
 // Resolution - 160x144 (20x18 tiles)
 pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
 
 #[derive(Debug, Copy, Clone)]
-pub struct PPU {
+pub struct Ppu {
     // Digital image with mode RGB. Size = 144 * 160 * 3 (RGB).
     pub data: [[[u8; 3]; SCREEN_WIDTH]; SCREEN_HEIGHT],
     mode: CartridgeMode,
     pub interrupt: u8,
     pub vblank: bool,
     pub hblank: bool,
-    lcd_control: LCDControl,
-    lcd_status: LCDStatus,
+    lcd_control: LcdControl,
+    lcd_status: LcdStatus,
     // FF42 - SCY - Scroll Y (R/W)
     // FF43 - SCX - Scroll X (R/W)
     // Specifies the position in the 256x256 pixels BG map (32x32 tiles) which is to be displayed at the upper/left
@@ -77,7 +77,7 @@ pub struct PPU {
     // Data can be read/written to/from the specified index address through Register FF69. When the Auto Increment
     // Bit is set then the index is automatically incremented after each <write> to FF69. Auto Increment has no
     // effect when <reading> from FF69, so the index must be manually incremented in that case.
-    bgpi: BGPI,
+    bgpi: Bgpi,
     // FF69 - BCPD/BGPD - CGB Mode Only - Background Palette Data
     // This register allows to read/write data to the CGBs Background Palette Memory, addressed through Register FF68.
     // Each color is defined by two bytes (Bit 0-7 in first byte).
@@ -93,7 +93,7 @@ pub struct PPU {
     // Note that four colors may be defined for each OBP Palettes - but only Color 1-3 of each Sprite Palette can be displayed,
     // Color 0 is always transparent, and can be initialized to a don't care value.
     // Note: Initially all sprite colors are uninitialized.
-    obpi: BGPI,
+    obpi: Bgpi,
     obp_data: [[[u8; 3]; 4]; 8],
     vram: [u8; 0x4000],
     // LCD VRAM Bank (CGB only)
@@ -149,16 +149,16 @@ pub struct PPU {
     dots: u32,
 }
 
-impl PPU {
-    pub fn new(mode: CartridgeMode) -> PPU {
-        PPU {
+impl Ppu {
+    pub fn new(mode: CartridgeMode) -> Ppu {
+        Ppu {
             data: [[[0xFFu8; 3]; SCREEN_WIDTH]; SCREEN_HEIGHT],
             mode,
             interrupt: InterruptFlag::None as u8,
             vblank: false,
             hblank: false,
-            lcd_control: LCDControl::new(),
-            lcd_status: LCDStatus::new(),
+            lcd_control: LcdControl::new(),
+            lcd_status: LcdStatus::new(),
             scroll_x: 0x00,
             scroll_y: 0x00,
             lcdc_y: 0x00,
@@ -168,9 +168,9 @@ impl PPU {
             bg_palette: 0x00,
             object_pallete_0: 0x00,
             object_pallete_1: 0x01,
-            bgpi: BGPI::new(),
+            bgpi: Bgpi::new(),
             bgp_data: [[[0u8; 3]; 4]; 8],
-            obpi: BGPI::new(),
+            obpi: Bgpi::new(),
             obp_data: [[[0u8; 3]; 4]; 8],
             vram: [0x00; 0x4000],
             vram_bank: 0x00,
@@ -233,7 +233,7 @@ impl PPU {
                     self.interrupt |= InterruptFlag::LCDStat as u8;
                 }
                 // Render scanline
-                if self.mode == CartridgeMode::GBC || self.lcd_control.has_bit0() {
+                if self.mode == CartridgeMode::Gbc || self.lcd_control.has_bit0() {
                     self.draw_background();
                 }
                 if self.lcd_control.has_bit1() {
@@ -345,7 +345,7 @@ impl PPU {
                 picture_y % 8
             };
             let tile_y_data: [u8; 2] =
-                if self.mode == CartridgeMode::GBC && tile_attribute.vram_bank {
+                if self.mode == CartridgeMode::Gbc && tile_attribute.vram_bank {
                     let a = self.get_vram(1, tile_location + u16::from(tile_y * 2));
                     let b = self.get_vram(1, tile_location + u16::from(tile_y * 2) + 1);
                     [a, b]
@@ -371,7 +371,7 @@ impl PPU {
             };
             let color = color_high | color_low;
             self.priorities[x] = (tile_attribute.priority, color);
-            if self.mode == CartridgeMode::GBC {
+            if self.mode == CartridgeMode::Gbc {
                 let r = self.bgp_data[tile_attribute.cgb_palette_number][color][0];
                 let g = self.bgp_data[tile_attribute.cgb_palette_number][color][1];
                 let b = self.bgp_data[tile_attribute.cgb_palette_number][color][2];
@@ -440,10 +440,8 @@ impl PPU {
                 if self.lcdc_y < picture_y || self.lcdc_y > picture_y + sprite_size - 1 {
                     continue;
                 }
-            } else {
-                if self.lcdc_y > picture_y.wrapping_add(sprite_size) - 1 {
-                    continue;
-                }
+            } else if self.lcdc_y > picture_y.wrapping_add(sprite_size) - 1 {
+                continue;
             }
             if picture_x >= (SCREEN_WIDTH as u8) && picture_x <= (0xFF - 7) {
                 continue;
@@ -456,7 +454,7 @@ impl PPU {
             };
             let tile_y_addr = 0x8000u16 + u16::from(tile_number) * 16 + u16::from(tile_y) * 2;
             let tile_y_data: [u8; 2] =
-                if self.mode == CartridgeMode::GBC && tile_attribute.vram_bank {
+                if self.mode == CartridgeMode::Gbc && tile_attribute.vram_bank {
                     let b1 = self.get_vram(1, tile_y_addr);
                     let b2 = self.get_vram(1, tile_y_addr + 1);
                     [b1, b2]
@@ -488,7 +486,7 @@ impl PPU {
 
                 // Confirm the priority of background and sprite.
                 let priority = self.priorities[picture_x.wrapping_add(x) as usize];
-                let skip = if self.mode == CartridgeMode::GBC && !self.lcd_control.has_bit0() {
+                let skip = if self.mode == CartridgeMode::Gbc && !self.lcd_control.has_bit0() {
                     priority.1 == 0
                 } else if priority.0 {
                     priority.1 != 0
@@ -499,7 +497,7 @@ impl PPU {
                     continue;
                 }
 
-                if self.mode == CartridgeMode::GBC {
+                if self.mode == CartridgeMode::Gbc {
                     let r = self.obp_data[tile_attribute.cgb_palette_number][color][0];
                     let g = self.obp_data[tile_attribute.cgb_palette_number][color][1];
                     let b = self.obp_data[tile_attribute.cgb_palette_number][color][2];
@@ -517,7 +515,7 @@ impl PPU {
     }
 }
 
-impl Memory for PPU {
+impl Memory for Ppu {
     fn get_byte(&self, addr: u16) -> u8 {
         match addr {
             // VRAM (memory at 8000h-9FFFh) is accessable during Mode 0-2

@@ -86,8 +86,8 @@ impl Registers {
             l: 0x4D,
         };
         match mode {
-            CartridgeMode::GB => registers.a = 0x01,
-            CartridgeMode::GBC => registers.a = 0x11,
+            CartridgeMode::Gb => registers.a = 0x01,
+            CartridgeMode::Gbc => registers.a = 0x11,
         };
         registers
     }
@@ -171,7 +171,7 @@ mod test {
 
     #[test]
     fn wide_registers() {
-        let mut reg = Registers::new(CartridgeMode::GB);
+        let mut reg = Registers::new(CartridgeMode::Gb);
         reg.a = 0x12;
         reg.set_f(0x23);
         reg.b = 0x34;
@@ -199,18 +199,18 @@ mod test {
 
     #[test]
     fn flags() {
-        let mut reg = Registers::new(CartridgeMode::GB);
+        let mut reg = Registers::new(CartridgeMode::Gb);
         let flags = [CpuFlag::C, CpuFlag::H, CpuFlag::N, CpuFlag::Z];
 
         assert_eq!(reg.f & 0x0F, 0);
         reg.set_f(0x00);
 
         for flag in flags {
-            assert_eq!(reg.has_flag(flag), false);
+            assert!(!reg.has_flag(flag));
             reg.set_flag(flag, true);
-            assert_eq!(reg.has_flag(flag), true);
+            assert!(reg.has_flag(flag));
             reg.set_flag(flag, false);
-            assert_eq!(reg.has_flag(flag), false);
+            assert!(!reg.has_flag(flag));
         }
 
         // Set all CPU flags
@@ -218,13 +218,13 @@ mod test {
             reg.set_flag(flag, true);
         }
         for flag in flags {
-            assert_eq!(reg.has_flag(flag), true);
+            assert!(reg.has_flag(flag));
         }
     }
 
     #[test]
     fn hl_special_functions() {
-        let mut reg = Registers::new(CartridgeMode::GB);
+        let mut reg = Registers::new(CartridgeMode::Gb);
         reg.set_hl(0x1234);
         assert_eq!(reg.hl(), 0x1234);
         assert_eq!(reg.hl_then_dec(), 0x1234);
@@ -236,7 +236,7 @@ mod test {
 
     #[test]
     fn initial_values_on_gbc() {
-        let reg = Registers::new(CartridgeMode::GBC);
+        let reg = Registers::new(CartridgeMode::Gbc);
         assert_eq!(reg.a, 0x11);
     }
 }

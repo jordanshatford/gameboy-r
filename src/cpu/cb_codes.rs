@@ -1,4 +1,4 @@
-use crate::cpu::CPU;
+use crate::cpu::Cpu;
 
 // Nintendo documents describe the CPU & instructions speed in machine cycles while this document describes them in
 // clock cycles. Here is the translation:
@@ -28,7 +28,7 @@ const CB_CYCLES: [u32; 256] = [
 ];
 
 // CPU CB Code Mapping (Prefixed by 0xCB)
-impl CPU {
+impl Cpu {
     pub fn execute_cb(&mut self, cb_code: u8) -> u32 {
         match cb_code {
             // RLC B

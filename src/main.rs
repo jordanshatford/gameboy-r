@@ -13,7 +13,7 @@ fn main() {
             &["-v", "--version"],
             Print(format!(
                 "Game Boy R version: v{}",
-                env!("CARGO_PKG_VERSION").to_string()
+                env!("CARGO_PKG_VERSION")
             )),
             "Show current version of the program",
         );
@@ -34,13 +34,15 @@ fn main() {
         arg_parser.parse_args_or_exit();
     }
 
-    let mut window_options = WindowOptions::default();
-    window_options.resize = true;
-    window_options.scale = match window_scale {
-        1 => Scale::X2,
-        2 => Scale::X4,
-        4 => Scale::X8,
-        _ => panic!("gameboy-r: unsupported scale options (valid options: 1, 2, 4)"),
+    let window_options = WindowOptions {
+        resize: true,
+        scale: match window_scale {
+            1 => Scale::X2,
+            2 => Scale::X4,
+            4 => Scale::X8,
+            _ => panic!("gameboy-r: unsupported scale options (valid options: 1, 2, 4)"),
+        },
+        ..Default::default()
     };
 
     let mut gameboy = Gameboy::new(rom_path, skip_checks);
@@ -54,7 +56,7 @@ fn main() {
         .unwrap();
 
     while window.is_open() {
-        gameboy.next();
+        gameboy.step();
         if gameboy.has_screen_updated() {
             let mut i: usize = 0;
             for l in gameboy.get_screen_data().iter() {

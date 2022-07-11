@@ -28,13 +28,13 @@
 // This is a possible compatibility problem - any monochrome games (if any) that disable the background,
 // but still want to display the window wouldn't work properly on CGBs.
 #[derive(Debug, Copy, Clone)]
-pub struct LCDControl {
+pub struct LcdControl {
     pub data: u8,
 }
 
-impl LCDControl {
-    pub fn new() -> LCDControl {
-        LCDControl { data: 0b0100_1000 }
+impl LcdControl {
+    pub fn new() -> LcdControl {
+        LcdControl { data: 0b0100_1000 }
     }
 
     pub fn has_bit7(&self) -> bool {
@@ -105,7 +105,7 @@ impl LCDControl {
 // Mode 0 is present between 201-207 clks, 2 about 77-83 clks, and 3 about 169-175 clks. A complete cycle through these
 // states takes 456 clks. VBlank lasts 4560 clks. A complete screen refresh occurs every 70224 clks.)
 #[derive(Debug, Copy, Clone)]
-pub struct LCDStatus {
+pub struct LcdStatus {
     //  Bit 6 - LYC=LY Coincidence Interrupt (1=Enable) (Read/Write)
     pub lyc_interrupt_enabled: bool,
     //  Bit 5 - Mode 2 OAM Interrupt         (1=Enable) (Read/Write)
@@ -123,9 +123,9 @@ pub struct LCDStatus {
     pub mode: u8,
 }
 
-impl LCDStatus {
-    pub fn new() -> LCDStatus {
-        LCDStatus {
+impl LcdStatus {
+    pub fn new() -> LcdStatus {
+        LcdStatus {
             lyc_interrupt_enabled: false,
             m2_oam_interrupt_enabled: false,
             m1_vblank_interrupt_enabled: false,
@@ -144,14 +144,14 @@ impl LCDStatus {
 // Bit is set then the index is automatically incremented after each <write> to FF69. Auto Increment has no
 // effect when <reading> from FF69, so the index must be manually incremented in that case.
 #[derive(Debug, Copy, Clone)]
-pub struct BGPI {
+pub struct Bgpi {
     pub index: u8,
     pub auto_increment: bool,
 }
 
-impl BGPI {
-    pub fn new() -> BGPI {
-        BGPI {
+impl Bgpi {
+    pub fn new() -> Bgpi {
+        Bgpi {
             index: 0x00,
             auto_increment: false,
         }

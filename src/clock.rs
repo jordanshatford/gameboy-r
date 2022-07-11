@@ -17,7 +17,7 @@ impl Clock {
     pub fn run_cycles(&mut self, cycles: u32) -> u32 {
         self.num_cycles += cycles;
         let normalized_cycles = self.num_cycles / self.period;
-        self.num_cycles = self.num_cycles % self.period;
+        self.num_cycles %= self.period;
         normalized_cycles
     }
 }

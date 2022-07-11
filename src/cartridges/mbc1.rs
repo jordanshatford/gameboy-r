@@ -56,7 +56,7 @@ pub enum BankMode {
     Ram,
 }
 
-pub struct MBC1 {
+pub struct Mbc1 {
     rom: Vec<u8>,
     ram: Vec<u8>,
     bank_mode: BankMode,
@@ -65,9 +65,9 @@ pub struct MBC1 {
     save_path: PathBuf,
 }
 
-impl MBC1 {
-    pub fn new(rom: Vec<u8>, ram: Vec<u8>, save_path: impl AsRef<Path>) -> MBC1 {
-        MBC1 {
+impl Mbc1 {
+    pub fn new(rom: Vec<u8>, ram: Vec<u8>, save_path: impl AsRef<Path>) -> Mbc1 {
+        Mbc1 {
             rom,
             ram,
             // The MBC1 defaults to 16Mbit ROM/8KByte RAM mode on power up.
@@ -95,7 +95,7 @@ impl MBC1 {
     }
 }
 
-impl Memory for MBC1 {
+impl Memory for Mbc1 {
     fn get_byte(&self, addr: u16) -> u8 {
         match addr {
             // ROM Bank 00 (Read Only)
@@ -162,10 +162,10 @@ impl Memory for MBC1 {
     }
 }
 
-impl Stable for MBC1 {
+impl Stable for Mbc1 {
     fn save(&self) {
         self.save_to_file(self.save_path.clone(), &self.ram);
     }
 }
 
-impl Cartridge for MBC1 {}
+impl Cartridge for Mbc1 {}

@@ -3,10 +3,10 @@ use std::path::Path;
 use std::rc::Rc;
 
 use crate::cartridges;
-use crate::cpu::RealTimeCPU;
+use crate::cpu::RealTimeCpu;
 use crate::joypad::JoypadKey;
 use crate::memory::Memory;
-use crate::mmu::MMU;
+use crate::mmu::Mmu;
 use crate::ppu::{SCREEN_HEIGHT, SCREEN_WIDTH};
 
 #[derive(Clone, Copy)]
@@ -22,20 +22,20 @@ pub enum GameboyButton {
 }
 
 pub struct Gameboy {
-    pub mmu: Rc<RefCell<MMU>>,
-    pub cpu: RealTimeCPU,
+    pub mmu: Rc<RefCell<Mmu>>,
+    pub cpu: RealTimeCpu,
 }
 
 impl Gameboy {
     pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Gameboy {
         let cartridge = cartridges::new(path, skip_checks);
         let cartridge_mode = cartridge.get_mode();
-        let mmu = Rc::new(RefCell::new(MMU::new(cartridge)));
-        let cpu = RealTimeCPU::new(cartridge_mode, mmu.clone());
+        let mmu = Rc::new(RefCell::new(Mmu::new(cartridge)));
+        let cpu = RealTimeCpu::new(cartridge_mode, mmu.clone());
         Gameboy { mmu, cpu }
     }
 
-    pub fn next(&mut self) -> u32 {
+    pub fn step(&mut self) -> u32 {
         if self.mmu.borrow().get_byte(self.cpu.cpu.registers.pc) == 0x10 {
             self.mmu.borrow_mut().perform_speed_switch();
         }

@@ -1,8 +1,8 @@
 use crate::cpu::registers::CpuFlag;
-use crate::cpu::CPU;
+use crate::cpu::Cpu;
 
 // CPU instruction functions
-impl CPU {
+impl Cpu {
     // Increment register value.
     // value = A,B,C,D,E,H,L,(HL)
     //

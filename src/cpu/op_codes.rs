@@ -1,5 +1,5 @@
 use crate::cpu::registers::CpuFlag;
-use crate::cpu::CPU;
+use crate::cpu::Cpu;
 
 // Nintendo documents describe the CPU & instructions speed in machine cycles while
 // this document describes them in clock cycles. Here is the translation:
@@ -29,7 +29,7 @@ const OP_CYCLES: [u32; 256] = [
 ];
 
 // CPU OP Code Mapping
-impl CPU {
+impl Cpu {
     pub fn execute(&mut self, op_code: u8) -> u32 {
         match op_code {
             // NOP

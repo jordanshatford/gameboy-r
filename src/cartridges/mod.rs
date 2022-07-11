@@ -1,20 +1,21 @@
 mod mbc1;
 mod mbc2;
+mod mbc3;
 mod rom;
 
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use crate::cartridges::mbc1::MBC1;
-use crate::cartridges::mbc2::MBC2;
+use crate::cartridges::mbc1::Mbc1;
+use crate::cartridges::mbc2::Mbc2;
 use crate::cartridges::rom::RomOnly;
 use crate::memory::Memory;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CartridgeMode {
-    GB,  // Original Game Boy
-    GBC, // Game Boy Color
+    Gb,  // Original Game Boy
+    Gbc, // Game Boy Color
 }
 
 pub trait Stable {
@@ -24,7 +25,7 @@ pub trait Stable {
         if path.to_str().unwrap().is_empty() {
             return;
         }
-        File::create(path.clone())
+        File::create(path)
             .and_then(|mut f| f.write_all(contents))
             .unwrap()
     }
@@ -113,8 +114,8 @@ pub trait Cartridge: Memory + Stable + Send {
     // location in ROM.
     fn get_mode(&self) -> CartridgeMode {
         match self.get_byte(0x0143) & 0x80 {
-            0x80 => CartridgeMode::GBC,
-            _ => CartridgeMode::GB,
+            0x80 => CartridgeMode::Gbc,
+            _ => CartridgeMode::Gb,
         }
     }
 }
@@ -154,26 +155,26 @@ pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
     // the cartridge header.
     let cartridge: Box<dyn Cartridge> = match rom[0x0147] {
         0x00 => Box::new(RomOnly::new(rom)),
-        0x01 => Box::new(MBC1::new(rom, vec![], "")),
+        0x01 => Box::new(Mbc1::new(rom, vec![], "")),
         0x02 => {
             let ram_size = get_ram_size(rom.as_ref());
-            Box::new(MBC1::new(rom, vec![0; ram_size], ""))
+            Box::new(Mbc1::new(rom, vec![0; ram_size], ""))
         }
         0x03 => {
             let ram_size = get_ram_size(rom.as_ref());
             let save_path = path.as_ref().to_path_buf().with_extension("sav");
             let ram = read_ram_from_save(save_path.clone(), ram_size);
-            Box::new(MBC1::new(rom, ram, save_path))
+            Box::new(Mbc1::new(rom, ram, save_path))
         }
         0x05 => {
             let ram_size = 512;
-            Box::new(MBC2::new(rom, vec![0; ram_size], ""))
+            Box::new(Mbc2::new(rom, vec![0; ram_size], ""))
         }
         0x06 => {
             let ram_size = 512;
             let save_path = path.as_ref().to_path_buf().with_extension("sav");
             let ram = read_ram_from_save(save_path.clone(), ram_size);
-            Box::new(MBC2::new(rom, ram, save_path))
+            Box::new(Mbc2::new(rom, ram, save_path))
         }
         byte => panic!("cartridge: unsupported type {:#04X?}", byte),
     };
@@ -198,7 +199,7 @@ pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
 //  52h - 1.1MByte (72 banks)
 //  53h - 1.2MByte (80 banks)
 //  54h - 1.5MByte (96 banks)
-pub fn get_rom_size(rom: &Vec<u8>) -> usize {
+pub fn get_rom_size(rom: &[u8]) -> usize {
     let kb_in_bytes = 16384;
     let rom_size_addr = 0x148;
     match rom[rom_size_addr] {
@@ -228,7 +229,7 @@ pub fn get_rom_size(rom: &Vec<u8>) -> usize {
 //  05h - 64 KBytes (8 banks of 8KBytes each)
 // When using a MBC2 chip 00h must be specified in this entry, even though the
 // MBC2 includes a built-in RAM of 512 x 4 bits.
-pub fn get_ram_size(rom: &Vec<u8>) -> usize {
+pub fn get_ram_size(rom: &[u8]) -> usize {
     let ram_size_addr = 0x149;
     match rom[ram_size_addr] {
         0x00 => 0,

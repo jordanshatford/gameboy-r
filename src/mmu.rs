@@ -1,11 +1,11 @@
 // https://mgba-emu.github.io/gbdoc/#memory-map
 
-use crate::apu::APU;
+use crate::apu::Apu;
 use crate::cartridges::Cartridge;
 use crate::joypad::Joypad;
 use crate::memory::Memory;
-use crate::ppu::hdma::{HDMAMode, HDMA};
-use crate::ppu::PPU;
+use crate::ppu::hdma::{Hdma, HdmaMode};
+use crate::ppu::Ppu;
 use crate::serial::Serial;
 use crate::timer::Timer;
 
@@ -39,16 +39,16 @@ const HRAM_SIZE: usize = 0x7F;
 const WRAM_SIZE: usize = 0x8000;
 const WRAM_BANK_SIZE: usize = 0x1000;
 
-pub struct MMU {
+pub struct Mmu {
     pub cartridge: Box<dyn Cartridge>,
-    apu: Option<APU>,
-    pub ppu: PPU,
+    apu: Option<Apu>,
+    pub ppu: Ppu,
     pub joypad: Joypad,
     serial: Serial,
     timer: Timer,
     speed: Speed,
     prepare_speed_switch: bool,
-    hdma: HDMA,
+    hdma: Hdma,
     hram: [u8; HRAM_SIZE],
     wram: [u8; WRAM_SIZE],
     wram_bank: usize,
@@ -62,19 +62,19 @@ pub struct MMU {
     interrupts_enabled: u8, // IE
 }
 
-impl MMU {
-    pub fn new(cartridge: Box<dyn Cartridge>) -> MMU {
+impl Mmu {
+    pub fn new(cartridge: Box<dyn Cartridge>) -> Mmu {
         let cartridge_mode = cartridge.get_mode();
-        let mut mmu = MMU {
-            cartridge: cartridge,
+        let mut mmu = Mmu {
+            cartridge,
             apu: None,
-            ppu: PPU::new(cartridge_mode),
+            ppu: Ppu::new(cartridge_mode),
             joypad: Joypad::new(),
             serial: Serial::new(),
             timer: Timer::new(),
             speed: Speed::Normal,
             prepare_speed_switch: false,
-            hdma: HDMA::new(),
+            hdma: Hdma::new(),
             hram: [0x00; HRAM_SIZE],
             wram: [0x00; WRAM_SIZE],
             wram_bank: 0x01,
@@ -158,7 +158,7 @@ impl MMU {
             return 0;
         }
         match self.hdma.mode {
-            HDMAMode::GDMA => {
+            HdmaMode::Gdma => {
                 let len = u32::from(self.hdma.remain) + 1;
                 for _ in 0..len {
                     self.run_dma_hram();
@@ -166,7 +166,7 @@ impl MMU {
                 self.hdma.active = false;
                 len * 8
             }
-            HDMAMode::HDMA => {
+            HdmaMode::Hdma => {
                 if !self.ppu.hblank {
                     return 0;
                 }
@@ -195,7 +195,7 @@ impl MMU {
     }
 }
 
-impl Memory for MMU {
+impl Memory for Mmu {
     fn get_byte(&self, addr: u16) -> u8 {
         match addr {
             // External bus (ROM region)
@@ -242,7 +242,7 @@ impl Memory for MMU {
                         None => 0x00,
                     },
                     // LCD Control Register, LCD Status Register, LCD Position and Scrolling, LCD Monochrome Palettes
-                    0xFF40..=0xFF45 | 0xFF47..=0xFF4b => self.ppu.get_byte(addr),
+                    0xFF40..=0xFF45 | 0xFF47..=0xFF4B => self.ppu.get_byte(addr),
                     // KEY1 - CGB Mode Only - Prepare Speed Switch
                     0xFF4D => {
                         // Bit 7: Current Speed (0=Normal, 1=Double) (Read Only)
@@ -262,7 +262,7 @@ impl Memory for MMU {
                     // LCD VRAM DMA Transfers (CGB only)
                     0xFF51..=0xFF55 => self.hdma.get_byte(addr),
                     // LCD Color Palettes (CGB only)
-                    0xFF68..=0xFF6b => self.ppu.get_byte(addr),
+                    0xFF68..=0xFF6B => self.ppu.get_byte(addr),
                     // SVBK - CGB Mode Only - WRAM Bank
                     0xFF70 => self.wram_bank as u8,
                     _ => 0x00,

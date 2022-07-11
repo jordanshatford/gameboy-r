@@ -1,17 +1,17 @@
 use super::memory::Memory;
 
 #[derive(Debug, Copy, Clone)]
-pub struct APU {}
+pub struct Apu {}
 
-impl APU {
-    pub fn _new() -> APU {
-        APU {}
+impl Apu {
+    pub fn _new() -> Apu {
+        Apu {}
     }
 
     pub fn run_cycles(&mut self, _cycles: u32) {}
 }
 
-impl Memory for APU {
+impl Memory for Apu {
     fn get_byte(&self, _addr: u16) -> u8 {
         panic!("apu: not implemented")
     }

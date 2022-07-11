@@ -28,7 +28,7 @@ use std::path::{Path, PathBuf};
 use crate::cartridges::{Cartridge, Stable};
 use crate::memory::Memory;
 
-pub struct MBC2 {
+pub struct Mbc2 {
     rom: Vec<u8>,
     ram: Vec<u8>,
     rom_bank: usize,
@@ -36,9 +36,9 @@ pub struct MBC2 {
     save_path: PathBuf,
 }
 
-impl MBC2 {
-    pub fn new(rom: Vec<u8>, ram: Vec<u8>, save_path: impl AsRef<Path>) -> MBC2 {
-        MBC2 {
+impl Mbc2 {
+    pub fn new(rom: Vec<u8>, ram: Vec<u8>, save_path: impl AsRef<Path>) -> Mbc2 {
+        Mbc2 {
             rom,
             ram,
             rom_bank: 1,
@@ -48,7 +48,7 @@ impl MBC2 {
     }
 }
 
-impl Memory for MBC2 {
+impl Memory for Mbc2 {
     fn get_byte(&self, addr: u16) -> u8 {
         match addr {
             // ROM Bank 00 (Read Only)
@@ -97,10 +97,10 @@ impl Memory for MBC2 {
     }
 }
 
-impl Stable for MBC2 {
+impl Stable for Mbc2 {
     fn save(&self) {
         self.save_to_file(self.save_path.clone(), &self.ram);
     }
 }
 
-impl Cartridge for MBC2 {}
+impl Cartridge for Mbc2 {}

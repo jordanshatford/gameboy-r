@@ -23,7 +23,7 @@ use crate::cartridges::CartridgeMode;
 use crate::cpu::registers::Registers;
 use crate::memory::Memory;
 
-pub struct CPU {
+pub struct Cpu {
     pub registers: Registers,
     pub memory: Rc<RefCell<dyn Memory>>,
     pub halted: bool,
@@ -31,9 +31,9 @@ pub struct CPU {
     pub ei: bool,
 }
 
-impl CPU {
-    pub fn new(mode: CartridgeMode, memory: Rc<RefCell<dyn Memory>>) -> CPU {
-        CPU {
+impl Cpu {
+    pub fn new(mode: CartridgeMode, memory: Rc<RefCell<dyn Memory>>) -> Cpu {
+        Cpu {
             registers: Registers::new(mode),
             memory,
             halted: false,
@@ -146,17 +146,17 @@ pub const CLOCK_FREQUENCY: u32 = 4_194_304;
 pub const STEP_TIME: u32 = 16;
 pub const STEP_CYCLES: u32 = (STEP_TIME as f64 / (1000_f64 / CLOCK_FREQUENCY as f64)) as u32;
 
-pub struct RealTimeCPU {
-    pub cpu: CPU,
+pub struct RealTimeCpu {
+    pub cpu: Cpu,
     step_cycles: u32,
     step_zero: time::Instant,
     step_flip: bool,
 }
 
-impl RealTimeCPU {
-    pub fn new(mode: CartridgeMode, memory: Rc<RefCell<dyn Memory>>) -> RealTimeCPU {
-        RealTimeCPU {
-            cpu: CPU::new(mode, memory),
+impl RealTimeCpu {
+    pub fn new(mode: CartridgeMode, memory: Rc<RefCell<dyn Memory>>) -> RealTimeCpu {
+        RealTimeCpu {
+            cpu: Cpu::new(mode, memory),
             step_cycles: 0,
             step_zero: time::Instant::now(),
             step_flip: false,

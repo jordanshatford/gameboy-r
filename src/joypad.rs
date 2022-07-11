@@ -69,6 +69,12 @@ impl Joypad {
     }
 }
 
+impl Default for Joypad {
+    fn default() -> Joypad {
+        Joypad::new()
+    }
+}
+
 impl Memory for Joypad {
     fn get_byte(&self, addr: u16) -> u8 {
         assert_eq!(addr, 0xFF00);
