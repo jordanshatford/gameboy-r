@@ -8,13 +8,10 @@ fn main() {
     let mut skip_checks = false;
     {
         let mut arg_parser = ArgumentParser::new();
-        arg_parser.set_description("Game Boy R");
+        arg_parser.set_description("Gameboy R");
         arg_parser.add_option(
             &["-v", "--version"],
-            Print(format!(
-                "Game Boy R version: v{}",
-                env!("CARGO_PKG_VERSION")
-            )),
+            Print(format!("Gameboy R version: v{}", env!("CARGO_PKG_VERSION"))),
             "Show current version of the program",
         );
         arg_parser.refer(&mut window_scale).add_option(

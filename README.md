@@ -1,5 +1,5 @@
-# Game Boy R
-A Game Boy emulator written in Rust. This emulator supports both Game Boy and Game Boy Color. A checklist of implemented features can be found below.
+# Gameboy R
+A Gameboy emulator written in Rust. This emulator supports both Gameboy and Gameboy Color. A checklist of implemented features can be found below.
 
 ## How to Use:
 You can run the emulator using the following command and specifying the path to your rom:
@@ -28,7 +28,7 @@ The following options can be specified
                   | |  '----------------'  | |
                   | |______________________/ |
                   |                          |
-                  |    .   GAME BOY R        |
+                  |    .    GAMEBOY R        |
      Up           |  _| |_              .-.  | ---> Z
 Left + Right <--- |-[_   _]-       .-. (   ) |
     Down          |   |_|         (   ) '-'  | ---> X

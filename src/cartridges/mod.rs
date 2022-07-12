@@ -17,8 +17,8 @@ use crate::memory::Memory;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CartridgeMode {
-    Gb,  // Original Game Boy
-    Gbc, // Game Boy Color
+    Gb,  // Original Gameboy
+    Gbc, // Gameboy Color
 }
 
 pub trait Stable {
@@ -79,7 +79,7 @@ pub trait Cartridge: Memory + Stable + Send {
     }
 
     // 0104-0133 - Nintendo Logo
-    // The Game Boy's boot procedure verifies the content of this bitmap (after it has displayed it), and
+    // The Gameboy's boot procedure verifies the content of this bitmap (after it has displayed it), and
     // LOCKS ITSELF UP if these bytes are incorrect. A CGB verifies only the first 18h bytes of the bitmap,
     // but others (for example a pocket gameboy) verify all 30h bytes.
     fn verify_nintendo_logo(&self) {
