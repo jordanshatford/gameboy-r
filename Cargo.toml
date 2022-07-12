@@ -1,7 +1,12 @@
 [package]
 name = "gameboyr"
 version = "0.1.0"
+description = "A Game Boy emulator written in Rust"
+keywords = ["Game Boy", "Emulation", "ROM"]
+categories = ["Emulation"]
 authors = ["Jordan Shatford <jordanshatford@live.com>"]
+license = "MIT"
+repository = "https://github.com/jordanshatford/gameboy-r"
 edition = "2021"
 
 [dependencies]
