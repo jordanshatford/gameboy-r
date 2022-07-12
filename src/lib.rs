@@ -28,8 +28,8 @@ pub enum GameboyButton {
 }
 
 pub struct Gameboy {
-    pub mmu: Rc<RefCell<mmu::Mmu>>,
-    pub cpu: cpu::RealTimeCpu,
+    mmu: Rc<RefCell<mmu::Mmu>>,
+    cpu: cpu::RealTimeCpu,
 }
 
 impl Gameboy {
