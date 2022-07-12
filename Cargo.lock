@@ -167,7 +167,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gameboy_r"
+name = "gameboyr"
 version = "0.1.0"
 dependencies = [
  "argparse",

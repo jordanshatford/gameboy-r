@@ -1,5 +1,5 @@
 use argparse::{ArgumentParser, Print, Store, StoreTrue};
-use gameboy_r::gameboy::{Gameboy, GameboyButton};
+use gameboyr::{Gameboy, GameboyButton};
 use minifb::{Key, Scale, Window, WindowOptions};
 
 fn main() {

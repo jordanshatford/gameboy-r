@@ -1,5 +1,5 @@
 [package]
-name = "gameboy_r"
+name = "gameboyr"
 version = "0.1.0"
 authors = ["Jordan Shatford <jordanshatford@live.com>"]
 edition = "2021"
