@@ -9,6 +9,7 @@ on:
 
 jobs:
   ci:
+    name: Build, Test, Fmt, Clippy
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

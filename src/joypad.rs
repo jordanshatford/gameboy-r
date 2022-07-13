@@ -70,7 +70,7 @@ impl Joypad {
 
     #[cfg(test)]
     fn get_matrix(&mut self) -> u8 {
-       self.matrix
+        self.matrix
     }
 
     #[cfg(test)]
@@ -106,8 +106,8 @@ impl Memory for Joypad {
 #[cfg(test)]
 mod test {
     use super::InterruptFlag;
-    use super::{Joypad, JoypadKey};
     use super::Memory;
+    use super::{Joypad, JoypadKey};
 
     #[test]
     fn joypad_functionality() {

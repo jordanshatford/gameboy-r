@@ -10,6 +10,7 @@ on:
 
 jobs:
   cd:
+    name: Deploy to Crates.io
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
