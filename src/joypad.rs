@@ -67,6 +67,16 @@ impl Joypad {
     pub fn keyup(&mut self, key: JoypadKey) {
         self.matrix |= key as u8;
     }
+
+    #[cfg(test)]
+    fn get_matrix(&mut self) -> u8 {
+       self.matrix
+    }
+
+    #[cfg(test)]
+    fn get_select(&mut self) -> u8 {
+        self.select
+    }
 }
 
 impl Default for Joypad {
@@ -90,5 +100,40 @@ impl Memory for Joypad {
     fn set_byte(&mut self, addr: u16, value: u8) {
         assert_eq!(addr, 0xFF00);
         self.select = value
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::InterruptFlag;
+    use super::{Joypad, JoypadKey};
+    use super::Memory;
+
+    #[test]
+    fn joypad_functionality() {
+        let mut joypad = Joypad::new();
+        assert_eq!(joypad.interrupt, InterruptFlag::None as u8);
+        assert_eq!(joypad.get_matrix(), 0xFF);
+        assert_eq!(joypad.get_select(), 0x00);
+        joypad.keydown(JoypadKey::A);
+        assert_eq!(joypad.interrupt, InterruptFlag::Joypad as u8);
+        assert_eq!(joypad.get_matrix(), 0b1110_1111);
+        joypad.keyup(JoypadKey::A);
+        assert_eq!(joypad.interrupt, InterruptFlag::Joypad as u8);
+        assert_eq!(joypad.get_matrix(), 0xFF);
+    }
+
+    #[test]
+    #[should_panic]
+    fn out_of_range_get_addr() {
+        let joypad = Joypad::new();
+        joypad.get_byte(0x0000);
+    }
+
+    #[test]
+    #[should_panic]
+    fn out_of_range_set_addr() {
+        let mut joypad = Joypad::new();
+        joypad.set_byte(0x0000, 0x00);
     }
 }

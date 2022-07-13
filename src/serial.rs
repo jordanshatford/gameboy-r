@@ -100,7 +100,7 @@ mod test {
     use super::Serial;
 
     #[test]
-    fn serial() {
+    fn serial_functionality() {
         let mut serial = Serial::new();
         assert_eq!(serial.data, 0x00);
         assert_eq!(serial.control, 0x00);
