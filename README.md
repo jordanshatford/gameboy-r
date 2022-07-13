@@ -1,4 +1,10 @@
 # Gameboy R
+
+[![Language: Rust](https://img.shields.io/badge/language-Rust-%23000000.svg?style=flat&logo=rust)](https://www.rust-lang.org/)
+[![crates.io](https://img.shields.io/crates/v/gameboyr)](https://crates.io/crates/gameboyr)
+[![crates.io downloads](https://img.shields.io/crates/d/gameboyr)](https://crates.io/crates/gameboyr)
+[![License: MIT](https://img.shields.io/crates/l/gameboyr)](https://github.com/jordanshatford/gameboy-r/blob/main/LICENSE.md)
+
 A Gameboy emulator written in Rust. This emulator supports both Gameboy and Gameboy Color. A checklist of implemented features can be found below.
 
 ## How to Use:
@@ -11,6 +17,17 @@ The following options can be specified
 -x, --scale         Scale the window 1 (Default), 2, 4
     --skip-checks   Skip header checksum and nintendo logo checks for ROM
 ```
+
+### With Crates.io
+You can install the emulator from [Crates.io](https://crates.io/crates/gameboyr) using:
+```
+$ cargo install gameboyr
+```
+Then run the emulator using:
+```
+$ gameboyr "./path/to/rom.gb"
+```
+The options specified above are also available here.
 
 ### Controls:
 ```
