@@ -1,9 +1,13 @@
+use std::fs::File;
+use std::io::Read;
+
 use argparse::{ArgumentParser, Print, Store, StoreTrue};
 use gameboyr::{Gameboy, GameboyButton};
 use minifb::{Key, Scale, Window, WindowOptions};
 
 fn main() {
     let mut rom_path = String::from("");
+    let mut save_path = String::from("");
     let mut window_scale = 1;
     let mut skip_checks = false;
     {
@@ -13,6 +17,11 @@ fn main() {
             &["-v", "--version"],
             Print(format!("Gameboy R version: v{}", env!("CARGO_PKG_VERSION"))),
             "Show current version of the program",
+        );
+        arg_parser.refer(&mut save_path).add_option(
+            &["-s", "--save"],
+            Store,
+            "Path to .sav file of the specified ROM (Default: location of ROM)",
         );
         arg_parser.refer(&mut window_scale).add_option(
             &["-x", "--scale"],
@@ -26,9 +35,14 @@ fn main() {
         );
         arg_parser
             .refer(&mut rom_path)
-            .add_argument("rom", Store, "Path to the rom you want to use.")
+            .add_argument("rom", Store, "Path to the ROM you want to use")
             .required();
         arg_parser.parse_args_or_exit();
+    }
+
+    // Default to ROM path if no save path specified
+    if save_path.clone().is_empty() {
+        save_path = rom_path.clone();
     }
 
     let window_options = WindowOptions {
@@ -42,7 +56,11 @@ fn main() {
         ..Default::default()
     };
 
-    let mut gameboy = Gameboy::new(rom_path, skip_checks);
+    let mut file = File::open(rom_path.clone()).unwrap();
+    let mut rom = Vec::new();
+    file.read_to_end(&mut rom).unwrap();
+
+    let mut gameboy = Gameboy::new(rom, save_path, skip_checks);
 
     let (width, height) = gameboy.get_screen_dimensions();
 

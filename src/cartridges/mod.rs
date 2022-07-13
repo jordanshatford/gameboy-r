@@ -141,10 +141,7 @@ pub trait Cartridge: Memory + Stable + Send {
 //  11h  MBC3                     FDh  BANDAI TAMA5
 //  12h  MBC3+RAM                 FEh  HuC3
 //  13h  MBC3+RAM+BATTERY         FFh  HuC1+RAM+BATTERY
-pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
-    let mut file = File::open(path.as_ref()).unwrap();
-    let mut rom = Vec::new();
-    file.read_to_end(&mut rom).unwrap();
+pub fn new(rom: Vec<u8>, path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
     // An internal information area is located at 0100-014F in each cartridge.
     if rom.len() < 0x150 {
         panic!("cartridge: invalid rom size")
@@ -164,8 +161,8 @@ pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
             Box::new(Mbc1::new(rom, vec![0; ram_size], ""))
         }
         0x03 => {
+            let (save_path, _) = get_save_paths(path);
             let ram_size = get_ram_size(rom.as_ref());
-            let save_path = path.as_ref().to_path_buf().with_extension("sav");
             let ram = read_ram_from_save(save_path.clone(), ram_size);
             Box::new(Mbc1::new(rom, ram, save_path))
         }
@@ -174,21 +171,19 @@ pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
             Box::new(Mbc2::new(rom, vec![0; ram_size], ""))
         }
         0x06 => {
+            let (save_path, _) = get_save_paths(path);
             let ram_size = 512;
-            let save_path = path.as_ref().to_path_buf().with_extension("sav");
             let ram = read_ram_from_save(save_path.clone(), ram_size);
             Box::new(Mbc2::new(rom, ram, save_path))
         }
         0x0F => {
-            let save_path = path.as_ref().to_path_buf().with_extension("sav");
-            let rtc_save_path = path.as_ref().to_path_buf().with_extension("rtc");
+            let (save_path, rtc_save_path) = get_save_paths(path);
             Box::new(Mbc3::new(rom, vec![], save_path, rtc_save_path))
         }
         0x10 => {
+            let (save_path, rtc_save_path) = get_save_paths(path);
             let ram_size = get_ram_size(rom.as_ref());
-            let save_path = path.as_ref().to_path_buf().with_extension("sav");
             let ram = read_ram_from_save(save_path.clone(), ram_size);
-            let rtc_save_path = path.as_ref().to_path_buf().with_extension("rtc");
             Box::new(Mbc3::new(rom, ram, save_path, rtc_save_path))
         }
         0x11 => Box::new(Mbc3::new(rom, vec![], "", "")),
@@ -197,8 +192,8 @@ pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
             Box::new(Mbc3::new(rom, vec![0; ram_size], "", ""))
         }
         0x13 => {
+            let (save_path, _) = get_save_paths(path);
             let ram_size = get_ram_size(rom.as_ref());
-            let save_path = path.as_ref().to_path_buf().with_extension("sav");
             let ram = read_ram_from_save(save_path.clone(), ram_size);
             Box::new(Mbc3::new(rom, ram, save_path, ""))
         }
@@ -208,8 +203,8 @@ pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn Cartridge> {
             Box::new(Mbc5::new(rom, vec![0; ram_size], ""))
         }
         0x1B => {
+            let (save_path, _) = get_save_paths(path);
             let ram_size = get_ram_size(rom.as_ref());
-            let save_path = path.as_ref().to_path_buf().with_extension("sav");
             let ram = read_ram_from_save(save_path.clone(), ram_size);
             Box::new(Mbc5::new(rom, ram, save_path))
         }
@@ -289,4 +284,14 @@ pub fn read_ram_from_save(path: impl AsRef<Path>, size: usize) -> Vec<u8> {
         }
         Err(_) => vec![0; size],
     }
+}
+
+// Get path for sav and rtc save files
+fn get_save_paths(rom_path: impl AsRef<Path>) -> (PathBuf, PathBuf) {
+    if rom_path.as_ref().to_str().unwrap().is_empty() {
+        return (PathBuf::new(), PathBuf::new());
+    }
+    let sav_path = rom_path.as_ref().to_path_buf().with_extension("sav");
+    let rtc_path = rom_path.as_ref().to_path_buf().with_extension("rtc");
+    (sav_path, rtc_path)
 }

@@ -14,7 +14,8 @@ $ cargo run --release -- "./path/to/rom.gb"
 ```
 The following options can be specified
 ```
--x, --scale         Scale the window 1 (Default), 2, 4
+-s, --save          Path to .sav file of the specified ROM (Default: location of ROM)
+-x, --scale         Scale the window by a factor of 1, 2, 4 (Default: 1)
     --skip-checks   Skip header checksum and nintendo logo checks for ROM
 ```
 

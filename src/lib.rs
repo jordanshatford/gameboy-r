@@ -33,8 +33,8 @@ pub struct Gameboy {
 }
 
 impl Gameboy {
-    pub fn new(path: impl AsRef<Path>, skip_checks: bool) -> Gameboy {
-        let cartridge = cartridges::new(path, skip_checks);
+    pub fn new(rom: Vec<u8>, save_path: impl AsRef<Path>, skip_checks: bool) -> Gameboy {
+        let cartridge = cartridges::new(rom, save_path, skip_checks);
         let cartridge_mode = cartridge.get_mode();
         let mmu = Rc::new(RefCell::new(mmu::Mmu::new(cartridge)));
         let cpu = cpu::RealTimeCpu::new(cartridge_mode, mmu.clone());
