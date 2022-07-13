@@ -21,3 +21,18 @@ impl Clock {
         normalized_cycles
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::Clock;
+
+    #[test]
+    fn clock_functionality() {
+        let mut clock = Clock::new(100);
+        assert_eq!(clock.run_cycles(200), 2);
+        assert_eq!(clock.num_cycles, 0);
+        clock = Clock::new(111);
+        assert_eq!(clock.run_cycles(221), 1);
+        assert_eq!(clock.num_cycles, 110);
+    }
+}
