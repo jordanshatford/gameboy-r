@@ -12,10 +12,32 @@ use crate::ppu::lcd::{Bgpi, LcdControl, LcdStatus};
 pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
 
+// Represents a single pixel on the Gameboy's screen
+#[derive(Debug, Copy, Clone)]
+pub struct Pixel {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
+impl Pixel {
+    fn new() -> Pixel {
+        Pixel {
+            r: 0xFF,
+            g: 0xFF,
+            b: 0xFF,
+        }
+    }
+
+    fn from_greyscale(g: u8) -> Pixel {
+        Pixel { r: g, g, b: g }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Ppu {
     // Digital image with mode RGB. Size = 144 * 160 * 3 (RGB).
-    pub data: [[[u8; 3]; SCREEN_WIDTH]; SCREEN_HEIGHT],
+    pub data: [[Pixel; SCREEN_WIDTH]; SCREEN_HEIGHT],
     mode: CartridgeMode,
     pub interrupt: u8,
     pub vblank: bool,
@@ -152,7 +174,7 @@ pub struct Ppu {
 impl Ppu {
     pub fn new(mode: CartridgeMode) -> Ppu {
         Ppu {
-            data: [[[0xFFu8; 3]; SCREEN_WIDTH]; SCREEN_HEIGHT],
+            data: [[Pixel::new(); SCREEN_WIDTH]; SCREEN_HEIGHT],
             mode,
             interrupt: InterruptFlag::None as u8,
             vblank: false,
@@ -289,11 +311,15 @@ impl Ppu {
         let lr = ((r * 13 + g * 2 + b) >> 1) as u8;
         let lg = ((g * 3 + b) << 1) as u8;
         let lb = ((r * 3 + g * 2 + b * 11) >> 1) as u8;
-        self.data[self.lcdc_y as usize][index] = [lr, lg, lb];
+        self.data[self.lcdc_y as usize][index] = Pixel {
+            r: lr,
+            g: lg,
+            b: lb,
+        };
     }
 
     fn set_greyscale(&mut self, index: usize, g: u8) {
-        self.data[self.lcdc_y as usize][index] = [g, g, g];
+        self.data[self.lcdc_y as usize][index] = Pixel::from_greyscale(g);
     }
 
     fn draw_background(&mut self) {
@@ -623,7 +649,7 @@ impl Memory for Ppu {
                     self.lcdc_y = 0;
                     self.lcd_status.mode = 0;
                     // Clean screen.
-                    self.data = [[[0xFFu8; 3]; SCREEN_WIDTH]; SCREEN_HEIGHT];
+                    self.data = [[Pixel::new(); SCREEN_WIDTH]; SCREEN_HEIGHT];
                     self.vblank = true;
                 }
             }

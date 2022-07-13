@@ -75,10 +75,10 @@ fn main() {
         if gameboy.has_screen_updated() {
             let mut i: usize = 0;
             for l in gameboy.get_screen_data().iter() {
-                for w in l.iter() {
-                    let r = u32::from(w[0]) << 16;
-                    let g = u32::from(w[1]) << 8;
-                    let b = u32::from(w[2]);
+                for pixel in l.iter() {
+                    let r = u32::from(pixel.r) << 16;
+                    let g = u32::from(pixel.g) << 8;
+                    let b = u32::from(pixel.b);
                     let a = 0xFF00_0000;
                     window_buffer[i] = a | r | g | b;
                     i += 1;

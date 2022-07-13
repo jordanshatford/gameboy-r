@@ -69,7 +69,7 @@ impl Gameboy {
         result
     }
 
-    pub fn get_screen_data(&self) -> [[[u8; 3]; ppu::SCREEN_WIDTH]; ppu::SCREEN_HEIGHT] {
+    pub fn get_screen_data(&self) -> [[ppu::Pixel; ppu::SCREEN_WIDTH]; ppu::SCREEN_HEIGHT] {
         self.mmu.borrow().ppu.data
     }
 

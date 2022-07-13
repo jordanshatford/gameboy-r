@@ -1,6 +1,6 @@
 [package]
 name = "gameboyr"
-version = "0.2.0"
+version = "0.2.1"
 description = "A Gameboy emulator written in Rust"
 keywords = ["Gameboy", "Emulation", "ROM"]
 categories = ["Emulation"]
