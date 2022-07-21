@@ -1,3 +1,7 @@
+//! A Gameboy emulator written in Rust
+//! 
+//! Gameboy R provides a simple to use implmentation of a Gameboy / Gameboy Color.
+
 mod apu;
 mod cartridges;
 mod clock;
@@ -15,9 +19,13 @@ use std::rc::Rc;
 
 use crate::memory::Memory;
 
+/// GameboyButton represents each possibly button available.
+/// 
+/// This enum is used to provide users with a way to easily map any
+/// key to a specific Gameboy button.
 #[derive(Clone, Copy)]
 pub enum GameboyButton {
-    Right,
+    Right, 
     Left,
     Up,
     Down,
@@ -27,12 +35,19 @@ pub enum GameboyButton {
     Start,
 }
 
+/// Gameboy represents the physical device itself.
+/// 
+/// The Gameboy functionality is provided to the user through a set of
+/// consise and useful helper functions. The user can not directly interact
+/// with the Gameboy itself.
 pub struct Gameboy {
     mmu: Rc<RefCell<mmu::Mmu>>,
     cpu: cpu::RealTimeCpu,
 }
 
 impl Gameboy {
+    /// Create a new Gameboy by providing ROM data, a save path, and whether to skip checks.
+    /// When the save path contains an existing save, that data will be loaded.
     pub fn new(rom: Vec<u8>, save_path: impl AsRef<Path>, skip_checks: bool) -> Gameboy {
         let cartridge = cartridges::new(rom, save_path, skip_checks);
         let cartridge_mode = cartridge.get_mode();
@@ -41,6 +56,7 @@ impl Gameboy {
         Gameboy { mmu, cpu }
     }
 
+    /// Perform one step (including CPU, MMU, PPU), returning the number of CPU cycles run.
     pub fn step(&mut self) -> u32 {
         if self.mmu.borrow().get_byte(self.cpu.cpu.registers.pc) == 0x10 {
             self.mmu.borrow_mut().perform_speed_switch();
@@ -50,38 +66,59 @@ impl Gameboy {
         cycles
     }
 
+    /// Save the current state of the Gameboy.
     pub fn save(&mut self) {
         self.mmu.borrow_mut().cartridge.save();
     }
 
+    /// Get the title to display in the format "Gameboy R - ROM_NAME".
     pub fn get_title(&self) -> String {
         let rom_name = self.mmu.borrow().cartridge.get_title();
         format!("Gameboy R - {}", rom_name)
     }
 
+    /// Get the dimensions of the Gameboys screen.
     pub fn get_screen_dimensions(&self) -> (usize, usize) {
         (ppu::SCREEN_WIDTH, ppu::SCREEN_HEIGHT)
     }
 
+    /// Check whether the Gameboy screen has updated and should rerender. This
+    /// will also reset the value to false once checked.
     pub fn has_screen_updated(&mut self) -> bool {
         let result = self.mmu.borrow().ppu.vblank;
         self.mmu.borrow_mut().ppu.vblank = false;
         result
     }
 
+    /// Get the current data on the screen. This is returned as a 2D array of Pixel's.
+    /// Where each Pixel represents the colors of a single pixel.
+    /// 
+    /// ```
+    /// struct Pixel {
+    ///     r: u8,
+    ///     g: u8,
+    ///     b: u8
+    /// }
+    /// ```
+    /// 
+    /// NOTE: when using a Gameboy without color support, all fields of the Pixel will be
+    ///       the same.
     pub fn get_screen_data(&self) -> [[ppu::Pixel; ppu::SCREEN_WIDTH]; ppu::SCREEN_HEIGHT] {
         self.mmu.borrow().ppu.data
     }
 
+    /// Check whether the Gameboy is able to take input.
     pub fn can_take_input(&mut self) -> bool {
         self.cpu.flip()
     }
 
+    /// Handle keydown on a GameboyButton. 
     pub fn handle_keydown(&mut self, button: GameboyButton) {
         let key = self.get_joypad_key(button);
         self.mmu.borrow_mut().joypad.keydown(key);
     }
 
+    /// Handle keyup on a GameboyButton.
     pub fn handle_keyup(&mut self, button: GameboyButton) {
         let key = self.get_joypad_key(button);
         self.mmu.borrow_mut().joypad.keyup(key);
