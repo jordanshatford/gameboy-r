@@ -1,5 +1,5 @@
 //! A Gameboy emulator written in Rust
-//! 
+//!
 //! Gameboy R provides a simple to use implmentation of a Gameboy / Gameboy Color.
 
 mod apu;
@@ -20,12 +20,12 @@ use std::rc::Rc;
 use crate::memory::Memory;
 
 /// GameboyButton represents each possibly button available.
-/// 
+///
 /// This enum is used to provide users with a way to easily map any
 /// key to a specific Gameboy button.
 #[derive(Clone, Copy)]
 pub enum GameboyButton {
-    Right, 
+    Right,
     Left,
     Up,
     Down,
@@ -36,7 +36,7 @@ pub enum GameboyButton {
 }
 
 /// Gameboy represents the physical device itself.
-/// 
+///
 /// The Gameboy functionality is provided to the user through a set of
 /// consise and useful helper functions. The user can not directly interact
 /// with the Gameboy itself.
@@ -92,7 +92,7 @@ impl Gameboy {
 
     /// Get the current data on the screen. This is returned as a 2D array of Pixel's.
     /// Where each Pixel represents the colors of a single pixel.
-    /// 
+    ///
     /// ```
     /// struct Pixel {
     ///     r: u8,
@@ -100,7 +100,7 @@ impl Gameboy {
     ///     b: u8
     /// }
     /// ```
-    /// 
+    ///
     /// NOTE: when using a Gameboy without color support, all fields of the Pixel will be
     ///       the same.
     pub fn get_screen_data(&self) -> [[ppu::Pixel; ppu::SCREEN_WIDTH]; ppu::SCREEN_HEIGHT] {
@@ -112,7 +112,7 @@ impl Gameboy {
         self.cpu.flip()
     }
 
-    /// Handle keydown on a GameboyButton. 
+    /// Handle keydown on a GameboyButton.
     pub fn handle_keydown(&mut self, button: GameboyButton) {
         let key = self.get_joypad_key(button);
         self.mmu.borrow_mut().joypad.keydown(key);
