@@ -3,7 +3,7 @@
 [![Language: Rust](https://img.shields.io/badge/language-Rust-%23000000.svg?style=flat&logo=rust)](https://www.rust-lang.org/)
 [![crates.io](https://img.shields.io/crates/v/gameboyr)](https://crates.io/crates/gameboyr)
 [![crates.io downloads](https://img.shields.io/crates/d/gameboyr)](https://crates.io/crates/gameboyr)
-[![License: MIT](https://img.shields.io/crates/l/gameboyr)](https://github.com/jordanshatford/gameboy-r/blob/main/LICENSE.md)
+[![License: MIT](https://img.shields.io/crates/l/gameboyr)](https://github.com/jordanshatford/gameboy-r/blob/main/LICENSE)
 
 A Gameboy emulator written in Rust. This emulator supports both Gameboy and Gameboy Color. A checklist of implemented features can be found below.
 
