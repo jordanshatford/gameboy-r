@@ -2,11 +2,8 @@ name: CD
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-      - 'Cargo.toml'
+    tags:
+      - '*'
 
 jobs:
   cd:
