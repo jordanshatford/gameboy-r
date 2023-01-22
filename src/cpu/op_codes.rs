@@ -842,49 +842,25 @@ impl Cpu {
             }
         };
         let ecycle = match op_code {
-            0x20 | 0x30 => {
-                if self.registers.has_flag(CpuFlag::Z) {
-                    0x00
-                } else {
-                    0x01
-                }
-            }
-            0x28 | 0x38 => {
-                if self.registers.has_flag(CpuFlag::Z) {
-                    0x01
-                } else {
-                    0x00
-                }
-            }
-            0xc0 | 0xd0 => {
+            0x20 | 0x30 => u32::from(!self.registers.has_flag(CpuFlag::Z)),
+            0x28 | 0x38 => u32::from(self.registers.has_flag(CpuFlag::Z)),
+            0xC0 | 0xD0 => {
                 if self.registers.has_flag(CpuFlag::Z) {
                     0x00
                 } else {
                     0x03
                 }
             }
-            0xc8 | 0xcc | 0xd8 | 0xdc => {
+            0xC8 | 0xCC | 0xD8 | 0xDC => {
                 if self.registers.has_flag(CpuFlag::Z) {
                     0x03
                 } else {
                     0x00
                 }
             }
-            0xc2 | 0xd2 => {
-                if self.registers.has_flag(CpuFlag::Z) {
-                    0x00
-                } else {
-                    0x01
-                }
-            }
-            0xca | 0xda => {
-                if self.registers.has_flag(CpuFlag::Z) {
-                    0x01
-                } else {
-                    0x00
-                }
-            }
-            0xc4 | 0xd4 => {
+            0xC2 | 0xD2 => u32::from(!self.registers.has_flag(CpuFlag::Z)),
+            0xCA | 0xDA => u32::from(self.registers.has_flag(CpuFlag::Z)),
+            0xC4 | 0xD4 => {
                 if self.registers.has_flag(CpuFlag::Z) {
                     0x00
                 } else {
