@@ -168,7 +168,7 @@ dependencies = [
 
 [[package]]
 name = "gameboyr"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "argparse",
  "minifb",
