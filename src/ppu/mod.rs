@@ -385,11 +385,7 @@ impl Ppu {
             } else {
                 picture_x % 8
             };
-            let color_low = if tile_y_data[0] & (0x80 >> tile_x) != 0 {
-                1
-            } else {
-                0
-            };
+            let color_low = usize::from(tile_y_data[0] & (0x80 >> tile_x) != 0);
             let color_high = if tile_y_data[1] & (0x80 >> tile_x) != 0 {
                 2
             } else {
@@ -401,9 +397,9 @@ impl Ppu {
                 let r = self.bgp_data[tile_attribute.cgb_palette_number][color][0];
                 let g = self.bgp_data[tile_attribute.cgb_palette_number][color][1];
                 let b = self.bgp_data[tile_attribute.cgb_palette_number][color][2];
-                self.set_rgb(x as usize, r, g, b);
+                self.set_rgb(x, r, g, b);
             } else {
-                let color = self.get_gray_shade(self.bg_palette, color) as u8;
+                let color = self.get_gray_shade(self.bg_palette, color);
                 self.set_greyscale(x, color);
             }
         }
@@ -495,11 +491,7 @@ impl Ppu {
                     continue;
                 }
                 let tile_x = if tile_attribute.x_flip { 7 - x } else { x };
-                let color_low = if tile_y_data[0] & (0x80 >> tile_x) != 0 {
-                    1
-                } else {
-                    0
-                };
+                let color_low = usize::from(tile_y_data[0] & (0x80 >> tile_x) != 0);
                 let color_high = if tile_y_data[1] & (0x80 >> tile_x) != 0 {
                     2
                 } else {
@@ -530,9 +522,9 @@ impl Ppu {
                     self.set_rgb(picture_x.wrapping_add(x) as usize, r, g, b);
                 } else {
                     let color = if tile_attribute.palette_number == 1 {
-                        self.get_gray_shade(self.object_pallete_1, color) as u8
+                        self.get_gray_shade(self.object_pallete_1, color)
                     } else {
-                        self.get_gray_shade(self.object_pallete_0, color) as u8
+                        self.get_gray_shade(self.object_pallete_0, color)
                     };
                     self.set_greyscale(picture_x.wrapping_add(x) as usize, color);
                 }
