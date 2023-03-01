@@ -11,4 +11,4 @@ edition = "2021"
 
 [dependencies]
 argparse = "0.2.2"
-minifb = "0.23.0"
+minifb = "0.24.0"
