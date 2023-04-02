@@ -73,16 +73,12 @@ fn main() {
     while window.is_open() {
         gameboy.step();
         if gameboy.has_screen_updated() {
-            let mut i: usize = 0;
-            for l in gameboy.get_screen_data().iter() {
-                for pixel in l.iter() {
-                    let r = u32::from(pixel.r) << 16;
-                    let g = u32::from(pixel.g) << 8;
-                    let b = u32::from(pixel.b);
-                    let a = 0xFF00_0000;
-                    window_buffer[i] = a | r | g | b;
-                    i += 1;
-                }
+            for (i, pixel) in gameboy.get_screen_data().iter().enumerate() {
+                let r = u32::from(pixel.r) << 16;
+                let g = u32::from(pixel.g) << 8;
+                let b = u32::from(pixel.b);
+                let a = 0xFF00_0000;
+                window_buffer[i] = a | r | g | b;
             }
             window
                 .update_with_buffer(window_buffer.as_slice(), width, height)

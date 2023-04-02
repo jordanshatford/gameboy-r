@@ -103,7 +103,7 @@ impl Gameboy {
     ///
     /// NOTE: when using a Gameboy without color support, all fields of the Pixel will be
     ///       the same.
-    pub fn get_screen_data(&self) -> [[ppu::Pixel; ppu::SCREEN_WIDTH]; ppu::SCREEN_HEIGHT] {
+    pub fn get_screen_data(&self) -> [ppu::Pixel; ppu::SCREEN_WIDTH * ppu::SCREEN_HEIGHT] {
         self.mmu.borrow().ppu.data
     }
 
