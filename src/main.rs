@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Read;
 
 use argparse::{ArgumentParser, Print, Store, StoreTrue};
-use gameboyr::{Gameboy, GameboyButton};
+use gameboyr::{Dimensions, Gameboy, GameboyButton};
 use minifb::{Key, Scale, Window, WindowOptions};
 
 fn main() {
@@ -62,7 +62,7 @@ fn main() {
 
     let mut gameboy = Gameboy::new(rom, save_path, skip_checks);
 
-    let (width, height) = gameboy.get_screen_dimensions();
+    let Dimensions { width, height } = gameboy.get_screen_dimensions();
 
     let mut window = Window::new(&gameboy.get_title(), width, height, window_options).unwrap();
     let mut window_buffer = vec![0x00; width * height];

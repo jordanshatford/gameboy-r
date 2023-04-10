@@ -19,6 +19,12 @@ use std::rc::Rc;
 
 use crate::memory::Memory;
 
+/// Dimensions represent length and width of a screen.
+pub struct Dimensions {
+    pub width: usize,
+    pub height: usize,
+}
+
 /// GameboyButton represents each possibly button available.
 ///
 /// This enum is used to provide users with a way to easily map any
@@ -78,8 +84,11 @@ impl Gameboy {
     }
 
     /// Get the dimensions of the Gameboys screen.
-    pub fn get_screen_dimensions(&self) -> (usize, usize) {
-        (ppu::SCREEN_WIDTH, ppu::SCREEN_HEIGHT)
+    pub fn get_screen_dimensions(&self) -> Dimensions {
+        Dimensions {
+            width: ppu::SCREEN_WIDTH,
+            height: ppu::SCREEN_HEIGHT,
+        }
     }
 
     /// Check whether the Gameboy screen has updated and should rerender. This
