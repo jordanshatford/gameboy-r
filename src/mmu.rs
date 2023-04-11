@@ -41,7 +41,7 @@ const WRAM_BANK_SIZE: usize = 0x1000;
 
 pub struct Mmu {
     pub cartridge: Box<dyn Cartridge>,
-    apu: Option<Apu>,
+    pub apu: Option<Apu>,
     pub ppu: Ppu,
     pub joypad: Joypad,
     serial: Serial,
