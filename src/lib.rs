@@ -41,6 +41,21 @@ pub enum GameboyButton {
     Start,
 }
 
+impl From<GameboyButton> for joypad::JoypadKey {
+    fn from(value: GameboyButton) -> Self {
+        match value {
+            GameboyButton::A => joypad::JoypadKey::A,
+            GameboyButton::B => joypad::JoypadKey::B,
+            GameboyButton::Right => joypad::JoypadKey::Right,
+            GameboyButton::Left => joypad::JoypadKey::Left,
+            GameboyButton::Up => joypad::JoypadKey::Up,
+            GameboyButton::Down => joypad::JoypadKey::Down,
+            GameboyButton::Select => joypad::JoypadKey::Select,
+            GameboyButton::Start => joypad::JoypadKey::Start,
+        }
+    }
+}
+
 /// Gameboy represents the physical device itself.
 ///
 /// The Gameboy functionality is provided to the user through a set of
@@ -123,26 +138,13 @@ impl Gameboy {
 
     /// Handle keydown on a GameboyButton.
     pub fn handle_keydown(&mut self, button: GameboyButton) {
-        let key = self.get_joypad_key(button);
+        let key = joypad::JoypadKey::from(button);
         self.mmu.borrow_mut().joypad.keydown(key);
     }
 
     /// Handle keyup on a GameboyButton.
     pub fn handle_keyup(&mut self, button: GameboyButton) {
-        let key = self.get_joypad_key(button);
+        let key = joypad::JoypadKey::from(button);
         self.mmu.borrow_mut().joypad.keyup(key);
-    }
-
-    fn get_joypad_key(&self, button: GameboyButton) -> joypad::JoypadKey {
-        match button {
-            GameboyButton::A => joypad::JoypadKey::A,
-            GameboyButton::B => joypad::JoypadKey::B,
-            GameboyButton::Right => joypad::JoypadKey::Right,
-            GameboyButton::Left => joypad::JoypadKey::Left,
-            GameboyButton::Up => joypad::JoypadKey::Up,
-            GameboyButton::Down => joypad::JoypadKey::Down,
-            GameboyButton::Select => joypad::JoypadKey::Select,
-            GameboyButton::Start => joypad::JoypadKey::Start,
-        }
     }
 }
