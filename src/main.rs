@@ -5,6 +5,18 @@ use argparse::{ArgumentParser, Print, Store, StoreTrue};
 use gameboyr::{Dimensions, Gameboy, GameboyButton};
 use minifb::{Key, Scale, Window, WindowOptions};
 
+// Map minifb keys to there respective Gameboy buttons
+const KEY_MAPPINGS: [(Key, GameboyButton); 8] = [
+    (Key::Right, GameboyButton::Right),
+    (Key::Up, GameboyButton::Up),
+    (Key::Left, GameboyButton::Left),
+    (Key::Down, GameboyButton::Down),
+    (Key::Z, GameboyButton::A),
+    (Key::X, GameboyButton::B),
+    (Key::Space, GameboyButton::Select),
+    (Key::Enter, GameboyButton::Start),
+];
+
 fn main() {
     let mut rom_path = String::from("");
     let mut save_path = String::from("");
@@ -84,19 +96,8 @@ fn main() {
                 .update_with_buffer(window_buffer.as_slice(), width, height)
                 .unwrap();
         }
-
         if gameboy.can_take_input() {
-            let key_map = vec![
-                (Key::Right, GameboyButton::Right),
-                (Key::Up, GameboyButton::Up),
-                (Key::Left, GameboyButton::Left),
-                (Key::Down, GameboyButton::Down),
-                (Key::Z, GameboyButton::A),
-                (Key::X, GameboyButton::B),
-                (Key::Space, GameboyButton::Select),
-                (Key::Enter, GameboyButton::Start),
-            ];
-            for (physical_key, gameboy_button) in &key_map {
+            for (physical_key, gameboy_button) in &KEY_MAPPINGS {
                 if window.is_key_down(*physical_key) {
                     gameboy.handle_keydown(*gameboy_button);
                 } else {
