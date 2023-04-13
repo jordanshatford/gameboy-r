@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::Read;
 
-use argparse::{ArgumentParser, Print, Store, StoreTrue};
+use argparse::{ArgumentParser, Print, Store, StoreFalse, StoreTrue};
 use gameboyr::{Dimensions, Gameboy, GameboyButton};
 use minifb::{Key, Scale, Window, WindowOptions};
 
@@ -21,6 +21,7 @@ fn main() {
     let mut rom_path = String::from("");
     let mut save_path = String::from("");
     let mut window_scale = 1;
+    let mut use_audio = true;
     let mut skip_checks = false;
     {
         let mut arg_parser = ArgumentParser::new();
@@ -39,6 +40,11 @@ fn main() {
             &["-x", "--scale"],
             Store,
             "Scale the window by a factor of 1, 2, 4 (Default: 1)",
+        );
+        arg_parser.refer(&mut use_audio).add_option(
+            &["--no-audio"],
+            StoreFalse,
+            "Run the emulator without audio support.",
         );
         arg_parser.refer(&mut skip_checks).add_option(
             &["--skip-checks"],
@@ -63,7 +69,7 @@ fn main() {
             1 => Scale::X2,
             2 => Scale::X4,
             4 => Scale::X8,
-            _ => panic!("gameboy-r: unsupported scale options (valid options: 1, 2, 4)"),
+            _ => panic!("gameboyr: unsupported scale options (valid options: 1, 2, 4)"),
         },
         ..Default::default()
     };
