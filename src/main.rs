@@ -80,6 +80,13 @@ fn main() {
 
     let mut gameboy = Gameboy::new(rom, save_path, skip_checks);
 
+    if use_audio {
+        let success = gameboy.try_enable_audio();
+        if !success {
+            panic!("gameboyr: failed to enable audio (try using: --no-audio option)")
+        }
+    }
+
     let Dimensions { width, height } = gameboy.get_screen_dimensions();
 
     let mut window = Window::new(&gameboy.get_title(), width, height, window_options).unwrap();

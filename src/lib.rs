@@ -77,6 +77,10 @@ impl Gameboy {
         Gameboy { mmu, cpu }
     }
 
+    pub fn try_enable_audio(&mut self) -> bool {
+        false
+    }
+
     /// Perform one step (including CPU, MMU, PPU), returning the number of CPU cycles run.
     pub fn step(&mut self) -> u32 {
         if self.mmu.borrow().get_byte(self.cpu.cpu.registers.pc) == 0x10 {
