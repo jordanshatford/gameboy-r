@@ -103,7 +103,7 @@ impl Gameboy {
     /// Get the title to display in the format "Gameboy R - ROM_NAME".
     pub fn get_title(&self) -> String {
         let rom_name = self.mmu.borrow().cartridge.get_title();
-        format!("Gameboy R - {}", rom_name)
+        format!("GameboyR - {}", rom_name)
     }
 
     /// Get the dimensions of the Gameboys screen.
@@ -146,13 +146,11 @@ impl Gameboy {
 
     /// Handle keydown on a GameboyButton.
     pub fn handle_keydown(&mut self, button: GameboyButton) {
-        let key = joypad::JoypadKey::from(button);
-        self.mmu.borrow_mut().joypad.keydown(key);
+        self.mmu.borrow_mut().joypad.keydown(button.into());
     }
 
     /// Handle keyup on a GameboyButton.
     pub fn handle_keyup(&mut self, button: GameboyButton) {
-        let key = joypad::JoypadKey::from(button);
-        self.mmu.borrow_mut().joypad.keyup(key);
+        self.mmu.borrow_mut().joypad.keyup(button.into());
     }
 }
