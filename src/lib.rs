@@ -77,6 +77,10 @@ impl Gameboy {
         Gameboy { mmu, cpu }
     }
 
+    pub fn shutdown(&mut self) {
+        self.save();
+    }
+
     pub fn try_enable_audio(&mut self) -> bool {
         false
     }

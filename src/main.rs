@@ -119,5 +119,5 @@ fn main() {
             }
         }
     }
-    gameboy.save();
+    gameboy.shutdown();
 }
