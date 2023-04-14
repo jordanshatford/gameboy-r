@@ -73,7 +73,7 @@ Left + Right <--- |-[_   _]-       .-. (   ) |
                   |    '           '-'   A   |
                   |                 B        |
                   |          ___   ___       |
-                  |         (___) (___)  ,., | ---> Enter / Select
+                  |         (___) (___)  ,., | ---> Space / Enter
                   |        select start ;:;: |
                   |                    ,;:;' /
                   |                   ,:;:'.'
@@ -85,13 +85,13 @@ Left + Right <--- |-[_   _]-       .-. (   ) |
   - [x] Registers & Flags
   - [x] Instruction Set
   - [x] Timing
-- [X] MMU
+- [x] MMU
   - [x] Work RAM (WRAM)
   - [x] High Ram (HRAM)
   - [x] HDMA & GDMA
   - [x] Speed switch
-- [X] I/O
-  - [X] Video Display (PPU)
+- [x] I/O
+  - [x] Video Display (PPU)
   - [ ] Sound Controller (APU)
   - [x] Joypad Input
   - [x] Serial Data Transfer
