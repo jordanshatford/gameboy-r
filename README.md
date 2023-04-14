@@ -1,9 +1,29 @@
-# Gameboy R
-
-[![Language: Rust](https://img.shields.io/badge/language-Rust-%23000000.svg?style=flat&logo=rust)](https://www.rust-lang.org/)
-[![crates.io](https://img.shields.io/crates/v/gameboyr)](https://crates.io/crates/gameboyr)
-[![crates.io downloads](https://img.shields.io/crates/d/gameboyr)](https://crates.io/crates/gameboyr)
-[![License: MIT](https://img.shields.io/crates/l/gameboyr)](https://github.com/jordanshatford/gameboy-r/blob/main/LICENSE)
+<p align="center">
+  <br />
+  <img width="150" height="150" src="./gameboy.png" alt="Logo">
+  <h1 align="center"><b>GameboyR</b></h1>
+  <div align="center">
+    <a href="https://www.rust-lang.org/">
+      <img src="https://img.shields.io/badge/language-Rust-%23000000.svg?style=flat&logo=rust" alt="Language: Rust">
+    </a>
+    <a href="https://crates.io/crates/gameboyr">
+      <img src="https://img.shields.io/crates/v/gameboyr" alt="Crates.io version">
+    </a>
+    <a href="https://crates.io/crates/gameboyr">
+      <img src="https://img.shields.io/crates/d/gameboyr" alt="Crates.io downloads">
+    </a>
+    <a href="https://github.com/jordanshatford/gameboy-r/blob/main/LICENSE">
+      <img src="https://img.shields.io/crates/l/gameboyr" alt="Crates.io license MIT">
+    </a>
+  </div>
+  <p align="center">
+    A Gameboy emulator written in Rust.
+    <br />
+    <a href="https://crates.io/crates/gameboyr"><strong>crates.io/crates/gameboyr »</strong></a>
+    <br />
+    <br />
+  </p>
+</p>
 
 A Gameboy emulator written in Rust. This emulator supports both Gameboy and Gameboy Color. A checklist of implemented features can be found below.
 
