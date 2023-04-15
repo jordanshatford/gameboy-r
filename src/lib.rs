@@ -42,7 +42,7 @@ pub enum GameboyButton {
 }
 
 impl From<GameboyButton> for joypad::JoypadKey {
-    fn from(value: GameboyButton) -> Self {
+    fn from(value: GameboyButton) -> joypad::JoypadKey {
         match value {
             GameboyButton::A => joypad::JoypadKey::A,
             GameboyButton::B => joypad::JoypadKey::B,
@@ -100,10 +100,9 @@ impl Gameboy {
         self.mmu.borrow_mut().cartridge.save();
     }
 
-    /// Get the title to display in the format "Gameboy R - ROM_NAME".
-    pub fn get_title(&self) -> String {
-        let rom_name = self.mmu.borrow().cartridge.get_title();
-        format!("GameboyR - {}", rom_name)
+    /// Get the title of the currently loaded ROM.
+    pub fn get_rom_title(&self) -> String {
+        self.mmu.borrow().cartridge.get_title()
     }
 
     /// Get the dimensions of the Gameboys screen.

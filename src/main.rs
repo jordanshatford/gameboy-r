@@ -89,7 +89,13 @@ fn main() {
 
     let Dimensions { width, height } = gameboy.get_screen_dimensions();
 
-    let mut window = Window::new(&gameboy.get_title(), width, height, window_options).unwrap();
+    let mut window = Window::new(
+        &format!("GameboyR - {}", gameboy.get_rom_title()),
+        width,
+        height,
+        window_options,
+    )
+    .unwrap();
     let mut window_buffer = vec![0x00; width * height];
     window
         .update_with_buffer(window_buffer.as_slice(), width, height)
