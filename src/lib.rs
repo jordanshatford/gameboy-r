@@ -77,10 +77,12 @@ impl Gameboy {
         Gameboy { mmu, cpu }
     }
 
+    // Shutdown the Gameboy.
     pub fn shutdown(&mut self) {
         self.save();
     }
 
+    // Attempt to enable audio on the Gameboy. Returning true if successful.
     pub fn try_enable_audio(&mut self) -> bool {
         false
     }
@@ -106,6 +108,13 @@ impl Gameboy {
     }
 
     /// Get the dimensions of the Gameboys screen.
+    ///
+    /// ```
+    /// struct Dimensions {
+    ///     width: usize,
+    ///     height: usize,
+    /// }
+    /// ```
     pub fn get_screen_dimensions(&self) -> Dimensions {
         Dimensions {
             width: ppu::SCREEN_WIDTH,
@@ -121,14 +130,14 @@ impl Gameboy {
         result
     }
 
-    /// Get the current data on the screen. This is returned as a 2D array of Pixel's.
+    /// Get the current data on the screen. This is returned as a 1D array of Pixel's.
     /// Where each Pixel represents the colors of a single pixel.
     ///
     /// ```
     /// struct Pixel {
     ///     r: u8,
     ///     g: u8,
-    ///     b: u8
+    ///     b: u8,
     /// }
     /// ```
     ///
