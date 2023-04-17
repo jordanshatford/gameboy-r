@@ -87,7 +87,7 @@ impl Default for Joypad {
 
 impl Memory for Joypad {
     fn get_byte(&self, addr: u16) -> u8 {
-        assert_eq!(addr, 0xFF00);
+        assert_eq!(addr, 0xFF00, "joypad: invalid address {:#06X?}", addr);
         if (self.select & 0b0001_0000) == 0x00 {
             return self.select | (self.matrix & 0x0F);
         }
@@ -98,7 +98,7 @@ impl Memory for Joypad {
     }
 
     fn set_byte(&mut self, addr: u16, value: u8) {
-        assert_eq!(addr, 0xFF00);
+        assert_eq!(addr, 0xFF00, "joypad: invalid address {:#06X?}", addr);
         self.select = value
     }
 }

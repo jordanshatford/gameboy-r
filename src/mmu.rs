@@ -325,7 +325,11 @@ impl Memory for Mmu {
                     // FF46 - DMA - DMA Transfer and Start Address (W)
                     0xFF46 => {
                         // Source: XX00-XX9F ;XX in range from 00-F1h
-                        assert!(value <= 0xF1);
+                        assert!(
+                            value <= 0xF1,
+                            "mmu: invalid DMA transfer start address {:?}",
+                            value
+                        );
                         let base = u16::from(value) << 8;
                         for i in 0..0xA0 {
                             let value = self.get_byte(base + i);

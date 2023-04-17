@@ -302,9 +302,9 @@ impl Ppu {
     // of 03EFh (Blue=0, Green=1Fh, Red=0Fh) will appear as Neon Green on VGA displays, but on the CGB it'll produce
     // a decently washed out Yellow
     fn set_rgb(&mut self, index: usize, r: u8, g: u8, b: u8) {
-        assert!(r <= 0x1F);
-        assert!(g <= 0x1F);
-        assert!(b <= 0x1F);
+        assert!(r <= 0x1F, "ppu: invalid rgb color (r: {:#04X?}", r);
+        assert!(g <= 0x1F, "ppu: invalid rgb color (g: {:#04X?}", g);
+        assert!(b <= 0x1F, "ppu: invalid rgb color (b: {:#04X?}", b);
         let r = u32::from(r);
         let g = u32::from(g);
         let b = u32::from(b);
