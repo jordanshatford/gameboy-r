@@ -37,6 +37,7 @@ The following options can be specified
 -s, --save          Path to .sav file of the specified ROM (Default: location of ROM)
 -x, --scale         Scale the window by a factor of 1, 2, 4 (Default: 1)
     --skip-checks   Skip header checksum and nintendo logo checks for ROM
+    --no-audio      Run the emulator without using audio
 ```
 
 ### With Crates.io
@@ -92,7 +93,7 @@ Left + Right <--- |-[_   _]-       .-. (   ) |
   - [x] Speed switch
 - [x] I/O
   - [x] Video Display (PPU)
-  - [ ] Sound Controller (APU)
+  - [x] Sound Controller (APU)
   - [x] Joypad Input
   - [x] Serial Data Transfer
   - [x] Timer
@@ -106,7 +107,8 @@ Left + Right <--- |-[_   _]-       .-. (   ) |
 ## References:
 - [Pandocs](https://bgb.bircd.org/pandocs.htm)
 - [GBDev Pandocs](https://gbdev.io/pandocs/)
-- [GBDev Wiki](https://gbdev.gg8.se/wiki/articles/Video_Display)
+- [GBDev Wiki: PPU](https://gbdev.gg8.se/wiki/articles/Video_Display)
+- [GBDev Wiki: APU](https://gbdev.gg8.se/wiki/articles/Gameboy_sound_hardware)
 - [GBOps](https://izik1.github.io/gbops/)
 - [Pastraiser (OP Codes)](https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html)
 - [Cartridge Header](https://gbdev.gg8.se/wiki/articles/The_Cartridge_Header)

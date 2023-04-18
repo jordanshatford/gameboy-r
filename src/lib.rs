@@ -84,7 +84,9 @@ impl Gameboy {
 
     // Attempt to enable audio on the Gameboy. Returning true if successful.
     pub fn try_enable_audio(&mut self) -> bool {
-        false
+        let apu = apu::Apu::new();
+        self.mmu.borrow_mut().apu = apu;
+        self.mmu.borrow().apu.is_some()
     }
 
     /// Perform one step (including CPU, MMU, PPU), returning the number of CPU cycles run.
