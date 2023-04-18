@@ -21,6 +21,9 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
           components: rustfmt, clippy
+      - name: Install Ubuntu dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install -y libasound2-dev
       - name: Build Release
         run: cargo build --release
       - name: Test
