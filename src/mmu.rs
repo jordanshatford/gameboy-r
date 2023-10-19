@@ -143,9 +143,9 @@ impl Mmu {
         self.interrupts_asserted |= self.ppu.interrupt;
         self.ppu.interrupt = InterruptFlag::None as u8;
 
-        self.apu
-            .as_mut()
-            .map_or((), |apu| apu.run_cycles(ppu_cycles));
+        if let Some(apu) = self.apu.as_mut() {
+            apu.run_cycles(ppu_cycles);
+        }
 
         self.interrupts_asserted |= self.serial.interrupt;
         self.serial.interrupt = InterruptFlag::None as u8;
