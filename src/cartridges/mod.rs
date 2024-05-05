@@ -96,11 +96,11 @@ pub trait Cartridge: Memory + Stable + Send {
     // The lower 8 bits of the result must be the same than the value in this entry. The GAME WON'T WORK if
     // this checksum is incorrect.
     fn verify_header_checksum(&self) {
-        let mut x: u8 = 0;
+        let mut checksum: u8 = 0;
         for addr in 0x0134..0x014D {
-            x = x.wrapping_sub(self.get_byte(addr)).wrapping_sub(1);
+            checksum = checksum.wrapping_sub(self.get_byte(addr)).wrapping_sub(1);
         }
-        if self.get_byte(0x014D) != x {
+        if self.get_byte(0x014D) != checksum {
             panic!("cartridge: could not validate header checksum")
         }
     }
