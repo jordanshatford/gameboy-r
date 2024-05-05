@@ -232,21 +232,19 @@ pub fn new(rom: Vec<u8>, path: impl AsRef<Path>, skip_checks: bool) -> Box<dyn C
 //  53h - 1.2MByte (80 banks)
 //  54h - 1.5MByte (96 banks)
 pub fn get_rom_size(rom: &[u8]) -> usize {
-    let kb_in_bytes = 16384;
-    let rom_size_addr = 0x148;
-    match rom[rom_size_addr] {
-        0x00 => kb_in_bytes * 2,
-        0x01 => kb_in_bytes * 4,
-        0x02 => kb_in_bytes * 8,
-        0x03 => kb_in_bytes * 16,
-        0x04 => kb_in_bytes * 32,
-        0x05 => kb_in_bytes * 64,
-        0x06 => kb_in_bytes * 128,
-        0x07 => kb_in_bytes * 256,
-        0x08 => kb_in_bytes * 512,
-        0x52 => kb_in_bytes * 72,
-        0x53 => kb_in_bytes * 80,
-        0x54 => kb_in_bytes * 96,
+    match rom[0x148] {
+        0x00 => 1024 * 16 * 2,
+        0x01 => 1024 * 16 * 4,
+        0x02 => 1024 * 16 * 8,
+        0x03 => 1024 * 16 * 16,
+        0x04 => 1024 * 16 * 32,
+        0x05 => 1024 * 16 * 64,
+        0x06 => 1024 * 16 * 128,
+        0x07 => 1024 * 16 * 256,
+        0x08 => 1024 * 16 * 512,
+        0x52 => 1024 * 16 * 72,
+        0x53 => 1024 * 16 * 80,
+        0x54 => 1024 * 16 * 96,
         byte => panic!("cartridge: unsupported rom size {:#04X?}", byte),
     }
 }
@@ -262,8 +260,7 @@ pub fn get_rom_size(rom: &[u8]) -> usize {
 // When using a MBC2 chip 00h must be specified in this entry, even though the
 // MBC2 includes a built-in RAM of 512 x 4 bits.
 pub fn get_ram_size(rom: &[u8]) -> usize {
-    let ram_size_addr = 0x149;
-    match rom[ram_size_addr] {
+    match rom[0x149] {
         0x00 => 0,
         0x01 => 1024 * 2,
         0x02 => 1024 * 8,
