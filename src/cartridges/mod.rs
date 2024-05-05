@@ -117,7 +117,7 @@ pub trait Cartridge: Memory + Stable + Send {
     // location in ROM.
     fn get_mode(&self) -> CartridgeMode {
         match self.get_byte(0x0143) & 0x80 {
-            0x80 => CartridgeMode::Gbc,
+            0x80 | 0xC0 => CartridgeMode::Gbc,
             _ => CartridgeMode::Gb,
         }
     }
