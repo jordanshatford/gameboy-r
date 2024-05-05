@@ -66,8 +66,11 @@ pub trait Cartridge: Memory + Stable + Send {
     //  C0h - Game works on CGB only (physically the same as 80h).
     fn get_title(&self) -> String {
         let mut buffer = String::new();
-        let has_short_title = self.get_byte(0x0143) == 0x80;
-        let end_addr: u16 = if has_short_title { 0x013E } else { 0x0143 };
+        let end_addr = if self.get_mode() == CartridgeMode::Gbc {
+            0x013E
+        } else {
+            0x0143
+        };
         for addr in 0x0134..=end_addr {
             match self.get_byte(addr) {
                 // If it is less than 16 characters then the remaining bytes are filled with 00's.
