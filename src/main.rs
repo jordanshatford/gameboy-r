@@ -60,7 +60,7 @@ fn main() {
 
     // Default to ROM path if no save path specified
     if save_path.clone().is_empty() {
-        save_path = rom_path.clone();
+        save_path.clone_from(&rom_path);
     }
 
     let window_options = WindowOptions {
