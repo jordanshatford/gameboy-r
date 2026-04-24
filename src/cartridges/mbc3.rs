@@ -207,16 +207,12 @@ impl Memory for Mbc3 {
             }
             // RAM Bank 00-03, if any (Read/Write)
             // RTC Register 08-0C (Read/Write)
-            0xA000..=0xBFFF => {
-                if self.ram_enable {
-                    if self.ram_bank <= 0x03 {
-                        let index = self.ram_bank * 0x2000 + addr as usize - 0xa000;
-                        self.ram[index]
-                    } else {
-                        self.rtc.get_byte(self.ram_bank as u16)
-                    }
+            0xA000..=0xBFFF if self.ram_enable => {
+                if self.ram_bank <= 0x03 {
+                    let index = self.ram_bank * 0x2000 + addr as usize - 0xa000;
+                    self.ram[index]
                 } else {
-                    0x00
+                    self.rtc.get_byte(self.ram_bank as u16)
                 }
             }
             _ => 0x00,
@@ -227,14 +223,12 @@ impl Memory for Mbc3 {
         match addr {
             // RAM Bank 00-03, if any (Read/Write)
             // RTC Register 08-0C (Read/Write)
-            0xA000..=0xBFFF => {
-                if self.ram_enable {
-                    if self.ram_bank <= 0x03 {
-                        let index = self.ram_bank * 0x2000 + addr as usize - 0xA000;
-                        self.ram[index] = value;
-                    } else {
-                        self.rtc.set_byte(self.ram_bank as u16, value)
-                    }
+            0xA000..=0xBFFF if self.ram_enable => {
+                if self.ram_bank <= 0x03 {
+                    let index = self.ram_bank * 0x2000 + addr as usize - 0xA000;
+                    self.ram[index] = value;
+                } else {
+                    self.rtc.set_byte(self.ram_bank as u16, value)
                 }
             }
             // RAM and Timer Enable (Write Only)
@@ -260,10 +254,8 @@ impl Memory for Mbc3 {
                 self.ram_bank = n;
             }
             // Latch Clock Data (Write Only)
-            0x6000..=0x7FFF => {
-                if value & 0x01 != 0 {
-                    self.rtc.tic();
-                }
+            0x6000..=0x7FFF if value & 0x01 != 0 => {
+                self.rtc.tic();
             }
             _ => {}
         }

@@ -1,5 +1,5 @@
-use crate::cpu::registers::CpuFlag;
 use crate::cpu::Cpu;
+use crate::cpu::registers::CpuFlag;
 
 // CPU instruction functions
 impl Cpu {
@@ -455,7 +455,7 @@ impl Cpu {
         self.registers.set_flag(CpuFlag::N, false);
         self.registers.set_flag(CpuFlag::H, false);
         self.registers.set_flag(CpuFlag::C, false);
-        (value >> 4) | (value << 4)
+        value.rotate_left(4)
     }
 
     // Test bit (bit) in register value.

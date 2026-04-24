@@ -107,13 +107,9 @@ impl Memory for Mbc1 {
                 self.rom[index]
             }
             // RAM Bank 00-03, if any (Read/Write)
-            0xA000..=0xBFFF => {
-                if self.ram_enabled {
-                    let index = self.get_ram_bank() * 0x2000 + addr as usize - 0xA000;
-                    self.ram[index]
-                } else {
-                    0x00
-                }
+            0xA000..=0xBFFF if self.ram_enabled => {
+                let index = self.get_ram_bank() * 0x2000 + addr as usize - 0xA000;
+                self.ram[index]
             }
             _ => 0x00,
         }
@@ -122,11 +118,9 @@ impl Memory for Mbc1 {
     fn set_byte(&mut self, addr: u16, value: u8) {
         match addr {
             // RAM Bank 00-03, if any (Read/Write)
-            0xA000..=0xBFFF => {
-                if self.ram_enabled {
-                    let index = self.get_ram_bank() * 0x2000 + addr as usize - 0xA000;
-                    self.ram[index] = value;
-                }
+            0xA000..=0xBFFF if self.ram_enabled => {
+                let index = self.get_ram_bank() * 0x2000 + addr as usize - 0xA000;
+                self.ram[index] = value;
             }
             // RAM Enable (Write Only)
             0x0000..=0x1FFF => {

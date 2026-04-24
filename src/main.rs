@@ -1,11 +1,8 @@
-use std::fs::File;
-use std::io::Read;
-
 use argparse::{ArgumentParser, Print, Store, StoreFalse, StoreTrue};
 use gameboyr::{Dimensions, Gameboy, GameboyButton};
 use minifb::{Key, Scale, Window, WindowOptions};
 
-// Map minifb keys to there respective Gameboy buttons
+// Map minifb keys to their respective Gameboy buttons
 const KEY_MAPPINGS: [(Key, GameboyButton); 8] = [
     (Key::Right, GameboyButton::Right),
     (Key::Up, GameboyButton::Up),
@@ -74,9 +71,8 @@ fn main() {
         ..Default::default()
     };
 
-    let mut file = File::open(rom_path.clone()).unwrap();
-    let mut rom = Vec::new();
-    file.read_to_end(&mut rom).unwrap();
+    let rom = std::fs::read(&rom_path)
+        .unwrap_or_else(|err| panic!("gameboyr: failed to read ROM '{}': {}", rom_path, err));
 
     let mut gameboy = Gameboy::new(rom, save_path, skip_checks);
 

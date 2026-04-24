@@ -4,8 +4,8 @@ use crate::apu::Apu;
 use crate::cartridges::Cartridge;
 use crate::joypad::Joypad;
 use crate::memory::Memory;
-use crate::ppu::hdma::{Hdma, HdmaMode};
 use crate::ppu::Ppu;
+use crate::ppu::hdma::{Hdma, HdmaMode};
 use crate::serial::Serial;
 use crate::timer::Timer;
 

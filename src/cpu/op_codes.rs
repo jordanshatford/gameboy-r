@@ -1,5 +1,5 @@
-use crate::cpu::registers::CpuFlag;
 use crate::cpu::Cpu;
+use crate::cpu::registers::CpuFlag;
 
 // Nintendo documents describe the CPU & instructions speed in machine cycles while
 // this document describes them in clock cycles. Here is the translation:
@@ -851,13 +851,7 @@ impl Cpu {
                     0x03
                 }
             }
-            0xC8 | 0xCC | 0xD8 | 0xDC => {
-                if self.registers.has_flag(CpuFlag::Z) {
-                    0x03
-                } else {
-                    0x00
-                }
-            }
+            0xC8 | 0xCC | 0xD8 | 0xDC if self.registers.has_flag(CpuFlag::Z) => 0x03,
             0xC2 | 0xD2 => u32::from(!self.registers.has_flag(CpuFlag::Z)),
             0xCA | 0xDA => u32::from(self.registers.has_flag(CpuFlag::Z)),
             0xC4 | 0xD4 => {

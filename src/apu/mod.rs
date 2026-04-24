@@ -27,7 +27,7 @@ use crate::memory::Memory;
 
 const DESIRED_CHANNELS: u16 = 2;
 const DESIRED_SAMPLE_FORMAT: cpal::SampleFormat = cpal::SampleFormat::F32;
-const DESIRED_SAMPLE_RATE: cpal::SampleRate = cpal::SampleRate(44100);
+const DESIRED_SAMPLE_RATE: cpal::SampleRate = 44100;
 
 pub struct Apu {
     pub buffer: Arc<Mutex<Vec<(f32, f32)>>>,
@@ -46,17 +46,16 @@ impl Apu {
     pub fn new() -> Option<Apu> {
         let buffer = Arc::new(Mutex::new(Vec::new()));
         let (stream, sample_rate) = get_audio_stream(buffer.clone())?;
-        let rate = sample_rate.0;
         let apu = Apu {
             buffer,
             register: Register::new(Channel::Control),
             clock: Clock::new(cpu::CLOCK_FREQUENCY / 512),
             frame_sequencer: FrameSequencer::new(),
-            channel1: SquareChannel::new(rate, Channel::Square1),
-            channel2: SquareChannel::new(rate, Channel::Square2),
-            channel3: WaveChannel::new(rate),
-            channel4: NoiseChannel::new(rate),
-            sample_rate: rate,
+            channel1: SquareChannel::new(sample_rate, Channel::Square1),
+            channel2: SquareChannel::new(sample_rate, Channel::Square2),
+            channel3: WaveChannel::new(sample_rate),
+            channel4: NoiseChannel::new(sample_rate),
+            sample_rate,
             audio_stream: stream,
         };
         apu.audio_stream.play().ok()?;

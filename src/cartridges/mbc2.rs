@@ -59,13 +59,7 @@ impl Memory for Mbc2 {
                 self.rom[index]
             }
             // 512x4bits RAM, built-in into the MBC2 chip (Read/Write)
-            0xA000..=0xA1FF => {
-                if self.ram_enabled {
-                    self.ram[(addr - 0xA000) as usize]
-                } else {
-                    0x00
-                }
-            }
+            0xA000..=0xA1FF if self.ram_enabled => self.ram[(addr - 0xA000) as usize],
             _ => 0x00,
         }
     }
@@ -75,22 +69,16 @@ impl Memory for Mbc2 {
         let value = value & 0x0F;
         match addr {
             // 512x4bits RAM, built-in into the MBC2 chip (Read/Write)
-            0xA000..=0xA1FF => {
-                if self.ram_enabled {
-                    self.ram[(addr - 0xA000) as usize] = value;
-                }
+            0xA000..=0xA1FF if self.ram_enabled => {
+                self.ram[(addr - 0xA000) as usize] = value;
             }
             // RAM Enable (Write Only)
-            0x0000..=0x1FFF => {
-                if addr & 0x0100 == 0 {
-                    self.ram_enabled = value == 0x0A;
-                }
+            0x0000..=0x1FFF if addr & 0x0100 == 0 => {
+                self.ram_enabled = value == 0x0A;
             }
             // ROM Bank Number (Write Only)
-            0x2000..=0x3FFF => {
-                if addr & 0x0100 != 0 {
-                    self.rom_bank = value as usize;
-                }
+            0x2000..=0x3FFF if addr & 0x0100 != 0 => {
+                self.rom_bank = value as usize;
             }
             _ => {}
         }

@@ -4,8 +4,6 @@ mod mbc3;
 mod mbc5;
 mod rom;
 
-use std::fs::File;
-use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use crate::cartridges::mbc1::Mbc1;
@@ -25,12 +23,16 @@ pub trait Stable {
     fn save(&self) {}
 
     fn save_to_file(&self, path: PathBuf, contents: &[u8]) {
-        if path.to_str().unwrap().is_empty() {
+        if path.as_os_str().is_empty() {
             return;
         }
-        File::create(path)
-            .and_then(|mut f| f.write_all(contents))
-            .unwrap()
+        std::fs::write(&path, contents).unwrap_or_else(|err| {
+            eprintln!(
+                "cartridge: failed to write save file '{}': {}",
+                path.display(),
+                err
+            );
+        });
     }
 }
 
@@ -276,14 +278,7 @@ pub fn get_ram_size(rom: &[u8]) -> usize {
 
 // Read RAM data from external sav file when available
 pub fn read_ram_from_save(path: impl AsRef<Path>, size: usize) -> Vec<u8> {
-    match File::open(path) {
-        Ok(mut f) => {
-            let mut ram = Vec::new();
-            f.read_to_end(&mut ram).unwrap();
-            ram
-        }
-        Err(_) => vec![0; size],
-    }
+    std::fs::read(path).unwrap_or_else(|_| vec![0; size])
 }
 
 // Get path for sav and rtc save files
