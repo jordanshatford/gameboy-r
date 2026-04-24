@@ -2,20 +2,6 @@
   <br />
   <img width="150" height="150" src="./gameboy.png" alt="Logo">
   <h1 align="center"><b>GameboyR</b></h1>
-  <div align="center">
-    <a href="https://www.rust-lang.org/">
-      <img src="https://img.shields.io/badge/language-Rust-%23000000.svg?style=flat&logo=rust" alt="Language: Rust">
-    </a>
-    <a href="https://crates.io/crates/gameboyr">
-      <img src="https://img.shields.io/crates/v/gameboyr" alt="Crates.io version">
-    </a>
-    <a href="https://crates.io/crates/gameboyr">
-      <img src="https://img.shields.io/crates/d/gameboyr" alt="Crates.io downloads">
-    </a>
-    <a href="https://github.com/jordanshatford/gameboy-r/blob/main/LICENSE">
-      <img src="https://img.shields.io/crates/l/gameboyr" alt="Crates.io license MIT">
-    </a>
-  </div>
   <p align="center">
     A Gameboy emulator written in Rust.
     <br />
@@ -27,13 +13,17 @@
 
 A Gameboy emulator written in Rust. This emulator supports both Gameboy and Gameboy Color. A checklist of implemented features can be found below.
 
-## How to Use:
+## How to Use
+
 You can run the emulator using the following command and specifying the path to your rom:
+
+```sh
+cargo run --release -- "./path/to/rom.gb"
 ```
-$ cargo run --release -- "./path/to/rom.gb"
-```
+
 The following options can be specified
-```
+
+```sh
 -s, --save          Path to .sav file of the specified ROM (Default: location of ROM)
 -x, --scale         Scale the window by a factor of 1, 2, 4 (Default: 1)
     --skip-checks   Skip header checksum and nintendo logo checks for ROM
@@ -41,18 +31,24 @@ The following options can be specified
 ```
 
 ### With Crates.io
+
 You can install the emulator from [Crates.io](https://crates.io/crates/gameboyr) using:
+
+```sh
+cargo install gameboyr
 ```
-$ cargo install gameboyr
-```
+
 Then run the emulator using:
+
+```sh
+gameboyr "./path/to/rom.gb"
 ```
-$ gameboyr "./path/to/rom.gb"
-```
+
 The options specified above are also available here.
 
-### Controls:
-```
+### Controls
+
+```txt
                     __________________________
                   |                          |
                   | .----------------------. |
@@ -81,7 +77,8 @@ Left + Right <--- |-[_   _]-       .-. (   ) |
                   '-----------------------`
 ```
 
-## Implemented:
+## Implemented
+
 - [x] CPU
   - [x] Registers & Flags
   - [x] Instruction Set
@@ -104,7 +101,8 @@ Left + Right <--- |-[_   _]-       .-. (   ) |
   - [x] MBC3 (max 2MByte ROM and/or 64KByte RAM and Timer)
   - [x] MBC5 (max 8MByte ROM and/or 128KByte RAM)
 
-## References:
+## References
+
 - [Pandocs](https://bgb.bircd.org/pandocs.htm)
 - [GBDev Pandocs](https://gbdev.io/pandocs/)
 - [GBDev Wiki: PPU](https://gbdev.gg8.se/wiki/articles/Video_Display)
