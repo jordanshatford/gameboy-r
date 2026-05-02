@@ -6,21 +6,9 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-    assignees:
-      - "jordanshatford"
-    groups:
-      github-actions:
-        patterns:
-          - '*'
+      interval: "daily"
 
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
-      interval: "weekly"
-    assignees:
-      - "jordanshatford"
-    groups:
-      cargo:
-        patterns:
-          - '*'
+      interval: "daily"
